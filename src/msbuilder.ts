@@ -2,134 +2,127 @@
 var vscode = require("vscode");
 var fs = require("fs");
 var path = require("path");
+var ansi = require("ansi-colors");
 var msbuild = require('msbuild');
 var globals = require("./globals.js");
 
 function build_project(path) {
-    msbuild.sourcePath = path;
-    msbuild.build();
+    var builder = msbuild();
+    let outputChannel = globals.OBJ_OUTPUT;
+
+    outputChannel.show();
+    outputChannel.clear();
+
+    let params = [];
+    params.push('/p:WarningLevel=4')
+    params.push('/verbosity:detailed')
+
+    builder.sourcePath = path;
+    builder.setConfig(params);
+    builder.logger = function (results) {
+        if (results != undefined) {
+            let output = ansi.unstyle(results as string).trim();
+
+            outputChannel.appendLine(output);
+        }
+    };
+
+    builder.build();
 };
 
 function build_proj_list_recursive(startPath) {
     console.log("Checking files from " + startPath);
 
-    let dirList = [];
-    let tmpList = [];
-    let accList = [];
+    let projList = [];
 
     try {
-        fs.readdirSync(startPath).forEach(
-            (file) => {
-                if (file.includes(".sln") || (file.includes(".vcxproj") && !file.includes(".vcxproj."))) {
-                    tmpList.push(path.join(startPath, file));
-                }
-            });
+        fs.readdirSync(startPath).forEach((file) => {
+            file = path.join(startPath, file);
 
-        dirList = dirList.concat(tmpList);
+            if (file.includes(".sln") || (file.includes(".vcxproj") && !file.includes(".vcxproj."))) {
+                projList.push(file);
+            }
 
-        // Add all the children's children
-        tmpList.forEach(function (subPath) {
-            accList.push(build_proj_list_recursive(subPath));
-        }, this);
-
-        accList.forEach(function (subList) {
-            dirList = dirList.concat(subList);
-        }, this);
-
-
+            let stats = fs.statSync(file);
+            if (stats.isDirectory()) {
+                build_proj_list_recursive(file).forEach((file) => {
+                    if (file.includes(".sln") || (file.includes(".vcxproj") && !file.includes(".vcxproj."))) {
+                        projList.push(file);
+                    }
+                });
+            }
+        });
     } catch (error) {
         console.log(this.name + error);
     }
 
-    return dirList;
+    return projList;
 }
 
-function build_proj_list(startPath, dirList) {
+function build_proj_list(startPath, projList) {
     console.log("Entry point for recursive directory listing");
 
-    if (dirList.length != 0) {
-        return dirList;
+    if (projList.length != 0) {
+        return projList;
     }
 
     startPath = path.join(startPath, path.sep);
-    dirList = build_proj_list_recursive(startPath);
+    projList = build_proj_list_recursive(startPath);
 
-    dirList = dirList.map(function (file) {
+    projList = projList.map(function (file) {
         return file.replace(startPath, "");
     });
 
-    return dirList;
+    return projList;
 };
 
-function load_proj(startPath, limit) {
+function load_proj_list(startPath) {
     return new Promise(
         (fulfill, reject) => {
             console.log("Building directory listing for VS projects");
 
             try {
-                let dirList = build_proj_list(startPath, []);
+                let projList = build_proj_list(startPath, []);
 
-                fulfill(dirList);
+                fulfill(projList);
             } catch (error) {
                 reject();
             }
         });
 };
 
-var depthCompare = function (left, right) {
-    var count = (str) => {
-        return (str.split(path.sep)).length;
-    };
-
-    return count(left) - count(right);
-};
-
-
 var load = function (state) {
     console.log("Indexing the workspace folder");
 
     return new Promise(
         (fulfill, reject) => {
-            let workspace = state.get(globals.TAG_WORKSPACE);
-            let dirty = state.get(globals.TAG_FUZZYDIRTY);
-            let start = undefined;
-
             // If we don't have a workspace (no folder open) don't load anything
             if (vscode.workspace.rootPath != undefined) {
-                if (dirty) {
-                    workspace = vscode.workspace.rootPath;
-                    state.update(globals.TAG_WORKSPACE, workspace);
-                    state.update(globals.TAG_DIRLIST, []);
-
-                    vscode.window.setStatusBarMessage("Loading projects... Please wait...", globals.TIMEOUT);
-                }
-                // If we have already loaded it, return early
-                else {
-                    let dirList = state.get(globals.TAG_DIRLIST);
-                    if (dirList.length != 0) {
-                        fulfill();
-                        return;
-                    }
-                    else {
-                        // No op if the directory list is empty, means still loading
-                        return;
-                    }
+                let projList = state.get(globals.TAG_VCXPROJS);
+                if (projList != undefined && projList.length != 0) {
+                    fulfill();
+                    return;
                 }
 
-                start = workspace;
-            }
-
-            if (start != undefined) {
                 try {
-                    console.log("Actual VS build call call");
-                    let limit = state.get(globals.TAG_DEPTHLIMIT);
+                    console.log("Start building the project list");
+                    return load_proj_list(vscode.workspace.rootPath).then(
+                        (value) => {
+                            if (value != undefined) {
+                                let projList = value as any[];
+                                projList.sort((left, right) => {
+                                    var count = (str) => {
+                                        return (str.split(path.sep)).length;
+                                    };
 
-                    return load_proj(start, limit).then(
-                        () => {
-                            let dirList = state.get(globals.TAG_DIRLIST);
-                            dirList.sort(depthCompare);
-                            state.update(globals.TAG_DIRLIST, dirList);
-                            fulfill();
+                                    return count(left) - count(right);
+                                });
+                                state.update(globals.TAG_VCXPROJS, projList);
+                                fulfill();
+                            }
+                            else {
+                                reject();
+                            }
                         },
                         () => {
                         });
@@ -150,21 +143,24 @@ var trigger_build = function (state) {
         () => {
             let root = state.get(globals.TAG_ROOTPATH);
             let start = vscode.workspace.rootPath === undefined ? (root === undefined ? "" : root) : vscode.workspace.rootPath;
-            let workspace = state.get(globals.TAG_WORKSPACE);
-            let dirList = workspace === vscode.workspace.rootPath ? state.get(globals.TAG_DIRLIST) : [];
+            let projList = state.get(globals.TAG_VCXPROJS);
 
-            fuzzy_loaded(state);
+            if (projList != undefined) {
+                if (projList.length == 0) {
+                    vscode.window.showErrorMessage("Could not find any Visual Studio projects to build");
+                    return;
+                }
 
-            vscode.window.showQuickPick(dirList)
-                .then(
-                    val => {
-                        if (val === undefined)
-                            return;
+                vscode.window.showQuickPick(projList)
+                    .then(
+                        val => {
+                            if (val === undefined)
+                                return;
 
-                        open_path(state, path.join(start, val));
-                    });
-        },
-        fuzzy_failed
+                            build_project(path.join(start, val));
+                        });
+            }
+        }
     );
 };
 

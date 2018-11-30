@@ -130,6 +130,16 @@ function jump(callback) {
         if (val == undefined) return undefined;
 
         fs.stat(val, (err, stats) => {
+            if (err && vscode.workspace.rootPath != undefined) {
+                val = path.join(vscode.workspace.rootPath, val);
+
+                fs.stat(val, (err, stats) => {
+                    callback(val);
+                });
+
+                return;
+            }
+
             callback(val);
         });
     });

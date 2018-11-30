@@ -7,11 +7,8 @@ var globals = require("./globals.js");
 var msbuilder = require("./msbuilder.js");
 
 function initialize(state) {
-    // Null the workspace if it has changed, to ensure that fuzzy find will reload
-    let workspace = state.get(globals.TAG_WORKSPACE);
-    if (workspace != vscode.workspace.rootPath) {
-        state.update(globals.TAG_WORKSPACE, undefined);
-    }
+    globals.OBJ_OUTPUT = vscode.window.createOutputChannel(globals.STR_CODECMDER);
+    globals.OBJ_OUTPUT.show(false);
 }
 
 // this method is called when your extension is activated

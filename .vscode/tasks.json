@@ -13,7 +13,10 @@
                 "--outDir",
                 "${workspaceFolder}"
             ],
-            "problemMatcher": ["$tsc"],
+            "problemMatcher": [
+                "$tsc"
+            ],
+            "isBackground": true,
             "group": {
                 "kind": "build",
                 "isDefault": true

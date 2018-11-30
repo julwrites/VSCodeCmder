@@ -1,0 +1,99 @@
+{
+    "name": "codecmder",
+    "displayName": "VSCodeCmder",
+    "description": "Commands to make it easier to use VSCode in a keyboard-only workflow",
+    "version": "0.0.1",
+    "publisher": "Julwrites",
+    "engines": {
+        "vscode": "^2.0.0"
+    },
+    "icon": "images/folderIcon.jpg",
+    "license": "https://github.com/julwrites/VSCodeCmder/blob/master/LICENSE",
+    "homepage": "https://github.com/julwrites/VSCodeCmder/blob/master/README.md",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/julwrites/VSCodeCmder.git"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "*",
+        "onCommand:extension.navigate",
+        "onCommand:extension.jumpToPath",
+        "onCommand:extension.setRoot",
+        "onCommand:extension.addBookmark",
+        "onCommand:extension.removeBookmark",
+        "onCommand:extension.clearBookmark",
+        "onCommand:extension.buildVcxproj"
+    ],
+    "main": "./extension",
+    "contributes": {
+        "commands": [
+            {
+                "command": "extension.navigate",
+                "title": "Navigate"
+            },
+            {
+                "command": "extension.jumpToPath",
+                "title": "Jump To Path"
+            },
+            {
+                "command": "extension.setRoot",
+                "title": "Set Root Path"
+            },
+            {
+                "command": "extension.addBookmark",
+                "title": "Bookmark: Add"
+            },
+            {
+                "command": "extension.removeBookmark",
+                "title": "Bookmark: Remove"
+            },
+            {
+                "command": "extension.clearBookmarks",
+                "title": "Bookmark: Clear All"
+            },
+            {
+                "command": "extension.buildVcxproj",
+                "title": "Build a Visual Studio Project"
+            }
+        ],
+        "keybindings": [
+            {
+                "command": "extension.navigate",
+                "key": "ctrl+alt+n",
+                "mac": "ctrl+cmd+n"
+            },
+            {
+                "command": "extension.jumpToPath",
+                "key": "ctrl+alt+j",
+                "mac": "ctrl+cmd+j"
+            },
+            {
+                "command": "extension.buildVcxproj",
+                "key": "ctrl+shift+b",
+                "mac": "ctrl+shift+b"
+            }
+        ]
+    },
+    "scripts": {
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "node ./node_modules/vscode/bin/test"
+    },
+    "dependencies": {
+        "clone": "^2.0.0",
+        "directory-tree": "^1.2.1",
+        "fs": "^0.0.1-security",
+        "msbuild": "^1.0.3",
+        "url-parse": "^1.4.3"
+    },
+    "devDependencies": {
+        "typescript": "^2.0.3",
+        "vscode": "^1.0.0",
+        "mocha": "^2.3.3",
+        "eslint": "^3.6.0",
+        "@types/node": "^6.0.40",
+        "@types/mocha": "^2.2.32"
+    }
+}

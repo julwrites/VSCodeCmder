@@ -6,6 +6,14 @@ var ansi = require("ansi-colors");
 var msbuild = require('msbuild');
 var globals = require("./globals.js");
 
+function log_output(results, prefix) {
+    let outputChannel = globals.OBJ_OUTPUT;
+
+    let output = ansi.unstyle(results as string).trim();
+
+    outputChannel.appendLine(prefix + '\t' + output);
+}
+
 function build_project(path) {
     var builder = msbuild();
     let outputChannel = globals.OBJ_OUTPUT;
@@ -13,17 +21,15 @@ function build_project(path) {
     outputChannel.show();
     outputChannel.clear();
 
-    let params = [];
-    params.push('/p:WarningLevel=4')
-    params.push('/verbosity:detailed')
-
     builder.sourcePath = path;
-    builder.setConfig(params);
+    builder.overrideParams.push('/p:WarningLevel=3');
+    builder.overrideParams.push('/v:detailed');
+
     builder.logger = function (results) {
         if (results != undefined) {
             let output = ansi.unstyle(results as string).trim();
 
-            outputChannel.appendLine(output);
+            outputChannel.appendLine('[build]:' + '\t' + output);
         }
     };
 

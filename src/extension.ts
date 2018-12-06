@@ -6,6 +6,12 @@ var bookmarks = require("./bookmarks.js");
 var globals = require("./globals.js");
 var msbuilder = require("./msbuilder.js");
 
+var platform = require('os').platform();
+
+function isWindows() {
+    return platform.toLowerCase().includes("Win");
+}
+
 function initialize(state) {
     globals.OBJ_OUTPUT = vscode.window.createOutputChannel(globals.STR_CODECMDER);
     globals.OBJ_OUTPUT.show(false);
@@ -30,8 +36,12 @@ function activate(context) {
         () => { bookmarks.del_bookmark(state) });
     var clrCommand = vscode.commands.registerCommand("extension.clearBookmarks",
         () => { bookmarks.clr_bookmarks(state) });
-    var bldCommand = vscode.commands.registerCommand("extension.buildVcxproj",
-        () => { msbuilder.build(state) });
+
+    if (isWindows()) {
+        var bldCommand = vscode.commands.registerCommand("extension.buildVcxproj",
+            () => { msbuilder.build(state) });
+        context.subscriptions.push(bldCommand);
+    }
 
     // Add to a list of disposables that die when the extension deactivates
     context.subscriptions.push(navCommand);
@@ -39,7 +49,6 @@ function activate(context) {
     context.subscriptions.push(addCommand);
     context.subscriptions.push(delCommand);
     context.subscriptions.push(clrCommand);
-    context.subscriptions.push(bldCommand);
 
     context.subscriptions.push(state);
 

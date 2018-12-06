@@ -1,11 +1,11 @@
 {
-    "name": "codecmder",
+    "name": "vscodecmder",
     "displayName": "VSCodeCmder",
     "description": "Commands to make it easier to use VSCode in a keyboard-only workflow",
     "version": "0.0.1",
     "publisher": "Julwrites",
     "engines": {
-        "vscode": "^1.0.0"
+        "vscode": "^1.10.0"
     },
     "icon": "images/folderIcon.jpg",
     "license": "https://github.com/julwrites/VSCodeCmder/blob/master/LICENSE",
@@ -27,7 +27,7 @@
         "onCommand:extension.clearBookmark",
         "onCommand:extension.buildVcxproj"
     ],
-    "main": "./extension",
+    "main": "./out/src/extension",
     "contributes": {
         "commands": [
             {
@@ -77,10 +77,6 @@
             }
         ]
     },
-    "scripts": {
-        "postinstall": "node ./node_modules/vscode/bin/install",
-        "test": "node ./node_modules/vscode/bin/test"
-    },
     "dependencies": {
         "ansi-colors": "^3.2.1",
         "clone": "^2.0.0",
@@ -89,12 +85,18 @@
         "msbuild": "^1.0.3",
         "url-parse": "^1.4.3"
     },
+    "scripts": {
+        "vscode:prepublish": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "node ./node_modules/vscode/bin/test"
+    },
     "devDependencies": {
         "@types/mocha": "^2.2.32",
         "@types/node": "^6.0.40",
         "eslint": "^3.6.0",
         "mocha": "^5.2.0",
-        "typescript": "^2.9.2",
-        "vscode": "^1.0.0"
+        "typescript": "^3.2.1",
+        "vscode": "^1.1.26"
     }
 }

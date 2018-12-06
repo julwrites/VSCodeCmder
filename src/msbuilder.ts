@@ -6,13 +6,13 @@ var ansi = require("ansi-colors");
 var msbuild = require('msbuild');
 var globals = require("./globals.js");
 
-function log_output(results: string, prefix: string) {
-    let outputChannel = globals.OBJ_OUTPUT;
+// function log_output(results: string, prefix: string) {
+//     let outputChannel = globals.OBJ_OUTPUT;
 
-    let output = ansi.unstyle(results as string).trim();
+//     let output = ansi.unstyle(results as string).trim();
 
-    outputChannel.appendLine(prefix + '\t' + output);
-}
+//     outputChannel.appendLine(prefix + '\t' + output);
+// }
 
 function build_project(path: string) {
     var builder = msbuild();

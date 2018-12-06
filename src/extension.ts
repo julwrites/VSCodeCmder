@@ -11,7 +11,7 @@ var msbuilder = require("./msbuilder.js");
 var platform = require('os').platform();
 
 function isWindows() {
-    return platform.toLowerCase().includes("Win");
+    return platform.toLowerCase().includes("win");
 }
 
 function initialize(state: Memento) {

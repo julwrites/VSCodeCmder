@@ -1,4 +1,5 @@
-// Includes
+import { Stats } from "fs";
+
 var vscode = require('vscode');
 var fs = require('fs');
 var path = require('path');
@@ -6,25 +7,25 @@ var clone = require('clone');
 
 var commands = ['>..', '>Select'];
 
-function quick_pick(pathCurr, dirList, options, bookmarks, callback) {
-    console.log('Setting up Quick Pick options');
+function quick_pick(pathCurr: string, dirList: string[], optionList: string[], bookmarkList: string[], callback: Function) {
+    console.log('Setting up Quick Pick optionList');
 
     // Add in commands for navigation
-    options = options.concat(bookmarks);
-    dirList = options.concat(dirList);
+    optionList = optionList.concat(bookmarkList);
+    dirList = optionList.concat(dirList);
 
     // Returns the result of a recursive query to quickpick
-    vscode.window.showQuickPick(dirList).then(val => {
+    vscode.window.showQuickPick(dirList).then((val: string) => {
         // As a special case, check if the path is undefined
-        if (pathCurr == undefined) {
+        if (pathCurr === undefined) {
             // Check if this is attempting to do something with an invalid path
-            if (options.indexOf(val) < 0) {
+            if (optionList.indexOf(val) < 0) {
                 pathCurr = path.join(val, path.sep);
                 val = '';
             }
         }
 
-        traverse_recursive(pathCurr, val, bookmarks, callback);
+        traverse_recursive(pathCurr, val, bookmarkList, callback);
     });
 }
 
@@ -33,7 +34,7 @@ function quick_pick(pathCurr, dirList, options, bookmarks, callback) {
 // The directory to list next
 // An empty string (indicating no directory)
 // Undefined (indicating either invalid or handled input)
-function option_handler(pathCurr, result, bookmarks, callback) {
+function option_handler(pathCurr: string, result: string, bookmarkList: string[], callback: Function) {
     console.log('Reading and handling input from Quick Pick');
 
     // Handling special cases
@@ -45,12 +46,9 @@ function option_handler(pathCurr, result, bookmarks, callback) {
             // Clone the old path for comparison
             let compare: string = clone(pathCurr);
             let index: number = compare.lastIndexOf(path.sep);
-            if (index != -1) {
+            if (index !== -1) {
                 pathCurr = pathCurr.slice(0, index + 1);
             }
-            // if (pathCurr === compare) {
-            //     return '';
-            // }
 
             return pathCurr;
         }
@@ -63,7 +61,7 @@ function option_handler(pathCurr, result, bookmarks, callback) {
     // If it is not handled, means we are moving into a new dir
 
     // Checks if this is a bookmark
-    if (bookmarks.includes(result)) {
+    if (bookmarkList.includes(result)) {
         callback(result);
         return undefined;
     }
@@ -89,7 +87,7 @@ function option_handler(pathCurr, result, bookmarks, callback) {
     return pathTry;
 }
 
-function traverse_recursive(pathPrev, result, bookmarks, callback) {
+function traverse_recursive(pathPrev: string, result: string, bookmarkList: string[], callback: Function) {
     console.log('Recursively traverse to next folder');
 
     // Resolves the previous path into a real path
@@ -98,9 +96,9 @@ function traverse_recursive(pathPrev, result, bookmarks, callback) {
     // Clones the previous path to use for this iteration
     var pathCurr = clone(pathPrev);
 
-    pathCurr = option_handler(pathCurr, result, bookmarks, callback);
+    pathCurr = option_handler(pathCurr, result, bookmarkList, callback);
 
-    if (pathCurr === undefined) return;
+    if (pathCurr === undefined) { return; }
 
     // If not a file, attempt to read the directory
     var dirList = [];
@@ -115,25 +113,25 @@ function traverse_recursive(pathPrev, result, bookmarks, callback) {
             dirList = fs.readdirSync(pathCurr);
         }
 
-        quick_pick(pathCurr, dirList, commands, bookmarks, callback);
+        quick_pick(pathCurr, dirList, commands, bookmarkList, callback);
     }
 }
 
-function traverse(startPath, bookmarks, callback) {
+function traverse(startPath: string, bookmarkList: string[], callback: Function) {
     console.log('Entry point for recursive traversal');
 
-    traverse_recursive(startPath, '', bookmarks, callback);
+    traverse_recursive(startPath, '', bookmarkList, callback);
 }
 
-function jump(callback) {
-    vscode.window.showInputBox({ prompt: 'Enter a path' }).then(val => {
-        if (val == undefined) return undefined;
+function jump(callback: Function) {
+    vscode.window.showInputBox({ prompt: 'Enter a path' }).then((val: string) => {
+        if (val === undefined) { return undefined; }
 
-        fs.stat(val, (err, stats) => {
-            if (err && vscode.workspace.rootPath != undefined) {
+        fs.stat(val, (err: Error, stats: Stats) => {
+            if (err && vscode.workspace.rootPath !== undefined) {
                 val = path.join(vscode.workspace.rootPath, val);
 
-                fs.stat(val, (err, stats) => {
+                fs.stat(val, (err: Error, stats: Stats) => {
                     callback(val);
                 });
 

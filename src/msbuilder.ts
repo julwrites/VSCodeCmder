@@ -1,4 +1,4 @@
-// Includes
+import { Memento } from "vscode";
 var vscode = require("vscode");
 var fs = require("fs");
 var path = require("path");
@@ -6,7 +6,7 @@ var ansi = require("ansi-colors");
 var msbuild = require('msbuild');
 var globals = require("./globals.js");
 
-function log_output(results, prefix) {
+function log_output(results: string, prefix: string) {
     let outputChannel = globals.OBJ_OUTPUT;
 
     let output = ansi.unstyle(results as string).trim();
@@ -14,7 +14,7 @@ function log_output(results, prefix) {
     outputChannel.appendLine(prefix + '\t' + output);
 }
 
-function build_project(path) {
+function build_project(path: string) {
     var builder = msbuild();
     let outputChannel = globals.OBJ_OUTPUT;
 
@@ -25,8 +25,8 @@ function build_project(path) {
     builder.overrideParams.push('/p:WarningLevel=3');
     builder.overrideParams.push('/v:detailed');
 
-    builder.logger = function (results) {
-        if (results != undefined) {
+    builder.logger = function (results: string) {
+        if (results !== undefined) {
             let output = ansi.unstyle(results as string).trim();
 
             outputChannel.appendLine('[build]:' + '\t' + output);
@@ -34,15 +34,15 @@ function build_project(path) {
     };
 
     builder.build();
-};
+}
 
-function build_proj_list_recursive(startPath) {
+function build_proj_list_recursive(startPath: string) {
     console.log("Checking files from " + startPath);
 
-    let projList = [];
+    let projList: string[] = [];
 
     try {
-        fs.readdirSync(startPath).forEach((file) => {
+        fs.readdirSync(startPath).forEach((file: string) => {
             file = path.join(startPath, file);
 
             if (file.includes(".sln") || (file.includes(".vcxproj") && !file.includes(".vcxproj."))) {
@@ -59,30 +59,30 @@ function build_proj_list_recursive(startPath) {
             }
         });
     } catch (error) {
-        console.log(this.name + error);
+        console.log(error);
     }
 
     return projList;
 }
 
-function build_proj_list(startPath, projList) {
+function build_proj_list(startPath: string, projList: string[]) {
     console.log("Entry point for recursive directory listing");
 
-    if (projList.length != 0) {
+    if (projList.length !== 0) {
         return projList;
     }
 
     startPath = path.join(startPath, path.sep);
     projList = build_proj_list_recursive(startPath);
 
-    projList = projList.map(function (file) {
+    projList = projList.map(function (file: string) {
         return file.replace(startPath, "");
     });
 
     return projList;
-};
+}
 
-function load_proj_list(startPath) {
+function load_proj_list(startPath: string) {
     return new Promise(
         (fulfill, reject) => {
             console.log("Building directory listing for VS projects");
@@ -95,17 +95,17 @@ function load_proj_list(startPath) {
                 reject();
             }
         });
-};
+}
 
-var load = function (state) {
+var load = function (state: Memento) {
     console.log("Indexing the workspace folder");
 
     return new Promise(
         (fulfill, reject) => {
             // If we don't have a workspace (no folder open) don't load anything
-            if (vscode.workspace.rootPath != undefined) {
-                let projList = state.get(globals.TAG_VCXPROJS);
-                if (projList != undefined && projList.length != 0) {
+            if (vscode.workspace.rootPath !== undefined) {
+                let projList: string[] = <string[]><any>state.get(globals.TAG_VCXPROJS);
+                if (projList !== undefined && projList.length !== 0) {
                     fulfill();
                     return;
                 }
@@ -114,10 +114,10 @@ var load = function (state) {
                     console.log("Start building the project list");
                     return load_proj_list(vscode.workspace.rootPath).then(
                         (value) => {
-                            if (value != undefined) {
+                            if (value !== undefined) {
                                 let projList = value as any[];
                                 projList.sort((left, right) => {
-                                    var count = (str) => {
+                                    var count = (str: string) => {
                                         return (str.split(path.sep)).length;
                                     };
 
@@ -136,32 +136,34 @@ var load = function (state) {
                     reject();
                 }
             }
-            else
+            else {
                 reject();
+            }
         });
 };
 
 
-var trigger_build = function (state) {
+var trigger_build = function (state: Memento) {
     console.log("Starting up MSBuild Trigger");
 
     return load(state).then(
         () => {
-            let root = state.get(globals.TAG_ROOTPATH);
-            let start = vscode.workspace.rootPath === undefined ? (root === undefined ? "" : root) : vscode.workspace.rootPath;
-            let projList = state.get(globals.TAG_VCXPROJS);
+            let root: string = <string><any>state.get(globals.TAG_ROOTPATH);
+            let start: string = vscode.workspace.rootPath === undefined ? (root === undefined ? "" : root) : vscode.workspace.rootPath;
+            let projList: string[] = <string[]><any>state.get(globals.TAG_VCXPROJS);
 
-            if (projList != undefined) {
-                if (projList.length == 0) {
+            if (projList !== undefined) {
+                if (projList.length === 0) {
                     vscode.window.showErrorMessage("Could not find any Visual Studio projects to build");
                     return;
                 }
 
                 vscode.window.showQuickPick(projList)
                     .then(
-                        val => {
-                            if (val === undefined)
+                        (val: string) => {
+                            if (val === undefined) {
                                 return;
+                            }
 
                             build_project(path.join(start, val));
                         });

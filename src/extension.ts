@@ -1,3 +1,5 @@
+import { Memento, ExtensionContext } from "vscode";
+
 // Includes
 var vscode = require("vscode");
 
@@ -12,13 +14,13 @@ function isWindows() {
     return platform.toLowerCase().includes("Win");
 }
 
-function initialize(state) {
+function initialize(state: Memento) {
     globals.OBJ_OUTPUT = vscode.window.createOutputChannel(globals.STR_CODECMDER);
     globals.OBJ_OUTPUT.show(false);
 }
 
 // this method is called when your extension is activated
-function activate(context) {
+function activate(context: ExtensionContext) {
     console.log("File Explorer is now available in VS Code");
 
     var state = context.globalState;
@@ -49,8 +51,6 @@ function activate(context) {
     context.subscriptions.push(addCommand);
     context.subscriptions.push(delCommand);
     context.subscriptions.push(clrCommand);
-
-    context.subscriptions.push(state);
 
     initialize(state);
 }

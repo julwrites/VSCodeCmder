@@ -6,7 +6,7 @@ exports.DEFAULT_DEPTH = 2;
 exports.TAG_ROOTPATH = 'codecmder.rootPath';
 exports.TAG_MRULIST = 'codecmder.recent';
 exports.TAG_BOOKMARKS = 'codecmder.bookmarks';
-exports.TAG_VCXPROJS = 'codecmder.vcxproj';
+exports.TAG_CPPPROJ = 'codecmder.cppproj';
 // Strings
 exports.STR_BOOKMARK = 'Bookmark: ';
 exports.STR_MRULIST = 'Recently Opened: ';

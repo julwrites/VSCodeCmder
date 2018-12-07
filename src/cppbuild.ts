@@ -121,7 +121,7 @@ var load = function (state: Memento) {
         (fulfill, reject) => {
             // If we don't have a workspace (no folder open) don't load anything
             if (vscode.workspace.rootPath !== undefined) {
-                let projList: string[] = <string[]><any>state.get(globals.TAG_VCXPROJS);
+                let projList: string[] = <string[]><any>state.get(globals.TAG_CPPPROJ);
                 if (projList !== undefined && projList.length !== 0) {
                     fulfill();
                     return;
@@ -140,7 +140,7 @@ var load = function (state: Memento) {
 
                                     return count(left) - count(right);
                                 });
-                                state.update(globals.TAG_VCXPROJS, projList);
+                                state.update(globals.TAG_CPPPROJ, projList);
                                 fulfill();
                             }
                             else {
@@ -174,7 +174,7 @@ var trigger_build = function (state: Memento) {
             () => {
                 let root: string = <string><any>state.get(globals.TAG_ROOTPATH);
                 let start: string = vscode.workspace.rootPath === undefined ? (root === undefined ? '' : root) : vscode.workspace.rootPath;
-                let projList: string[] = <string[]><any>state.get(globals.TAG_VCXPROJS);
+                let projList: string[] = <string[]><any>state.get(globals.TAG_CPPPROJ);
 
                 if (projList !== undefined) {
                     if (projList.length === 0) {

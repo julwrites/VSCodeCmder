@@ -25,7 +25,7 @@
         "onCommand:extension.addBookmark",
         "onCommand:extension.removeBookmark",
         "onCommand:extension.clearBookmark",
-        "onCommand:extension.buildVcxproj"
+        "onCommand:extension.buildproj"
     ],
     "main": "./out/extension",
     "contributes": {

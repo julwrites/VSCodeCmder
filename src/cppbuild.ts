@@ -10,13 +10,12 @@ var commandExists = require('command-exists');
 var spawn = require('cross-spawn');
 
 var build_tool: string;
-var build_cmd: string;
 var build_ext: string[];
 
-var cmd_map: Record<string, string> = {
-    'msbuild': 'msbuild',
-    'make': 'make -f',
-    'xcode': 'xcode'
+var opt_map: Record<string, string[]> = {
+    'msbuild': [],
+    'make': ['-f'],
+    'xcode': []
 }
 
 var ext_map: Record<string, string[]> = {
@@ -44,11 +43,11 @@ function build_project(path: string, params: string[]) {
     outputChannel.show();
     outputChannel.clear();
 
-    params = [path].concat(params);
+    params = opt_map[build_tool].concat([path]).concat(params);
 
-    log_output([build_cmd].concat(params).join(' '), '[command]');
+    log_output([build_tool].concat(params).join(' '), '[command]');
 
-    let child: ChildProcess = spawn(build_cmd, params);
+    let child: ChildProcess = spawn(build_tool, params);
 
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
@@ -199,15 +198,12 @@ function darwin_build_env() {
 function build_env() {
     if (windows() && windows_build_env()) {
         build_ext = ext_map[build_tool];
-        build_cmd = cmd_map[build_tool];
     }
     else if (linux() && linux_build_env()) {
         build_ext = ext_map[build_tool];
-        build_cmd = cmd_map[build_tool];
     }
     else if (darwin() && darwin_build_env()) {
         build_ext = ext_map[build_tool];
-        build_cmd = cmd_map[build_tool];
     }
     else { return false; }
 

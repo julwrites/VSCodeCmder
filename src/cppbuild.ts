@@ -126,12 +126,6 @@ var load = function (state: Memento) {
         (fulfill, reject) => {
             // If we don't have a workspace (no folder open) don't load anything
             if (vscode.workspace.rootPath !== undefined) {
-                let projList: string[] = <string[]><any>state.get(globals.TAG_CPPPROJ);
-                if (projList !== undefined && projList.length !== 0) {
-                    fulfill();
-                    return;
-                }
-
                 try {
                     console.log('Start building the project list');
                     return load_proj_list(vscode.workspace.rootPath).then(

@@ -70,18 +70,14 @@ function build_proj_list_recursive(startPath: string) {
         fs.readdirSync(startPath).forEach((file: string) => {
             file = path.join(startPath, file);
 
-            build_proj.forEach((value: string) => {
+            for (let value of build_proj) {
                 if (file.includes(value)) {
                     projList.push(file);
                 }
-            });
+            }
 
-            let stats = fs.statSync(file);
-
-            if (stats.isDirectory()) {
-                build_proj_list_recursive(file).forEach((value: string) => {
-                    projList.push(file);
-                });
+            if (fs.statSync(file).isDirectory()) {
+                projList = projList.concat(build_proj_list_recursive(file));
             }
         });
     } catch (error) {

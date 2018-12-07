@@ -1,5 +1,4 @@
 import { Memento, ExtensionContext } from 'vscode';
-import { win } from './globals';
 
 // Includes
 var vscode = require('vscode');
@@ -35,12 +34,8 @@ function activate(context: ExtensionContext) {
         () => { bookmarks.del_bookmark(state); });
     var clrCommand = vscode.commands.registerCommand('extension.clearBookmarks',
         () => { bookmarks.clr_bookmarks(state); });
-
-    if (win()) {
-        var bldCommand = vscode.commands.registerCommand('extension.buildproj',
-            () => { cppbuild.build(state); });
-        context.subscriptions.push(bldCommand);
-    }
+    var bldCommand = vscode.commands.registerCommand('extension.buildproj',
+        () => { cppbuild.build(state); });
 
     // Add to a list of disposables that die when the extension deactivates
     context.subscriptions.push(navCommand);
@@ -49,6 +44,7 @@ function activate(context: ExtensionContext) {
     context.subscriptions.push(addCommand);
     context.subscriptions.push(delCommand);
     context.subscriptions.push(clrCommand);
+    context.subscriptions.push(bldCommand);
 
     initialize(state);
 }

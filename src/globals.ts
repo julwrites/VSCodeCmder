@@ -16,6 +16,17 @@ exports.STR_CODECMDER = 'VSCodeCmder';
 exports.OBJ_OUTPUT = undefined;
 
 
-export function win() {
+export function windows() {
     return require('os').platform().indexOf('win') > -1;
-};
+}
+
+export function linux() {
+    return require('os').platform().indexOf('linux') > -1;
+}
+
+export function darwin() {
+    return require('os').platform().indexOf('darwin') > -1;
+}
+
+
+

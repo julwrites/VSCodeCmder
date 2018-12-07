@@ -1,8 +1,8 @@
-# VSCode Explorer README
+# VSCodeCmder README
 
 ![status: active](https://img.shields.io/badge/status-active-green.svg)
 
-VSCode Explorer adds some commands for navigating to files/directory from VSCode's Command Palette.
+VSCodeCmder adds some commands for navigating to files/directory from VSCode's Command Palette.
 
 ## Features
 
@@ -37,9 +37,14 @@ Bookmark:
 
 ![Bookmarks](/images/Bookmarks.png)
 
+Build C++ Project:
+
+- Build:
+    - Searches the workspace for C++ project files and attempts to run msbuild or make
+
 ## Requirements
 
-No external requirements
+For CPP building, msbuild or make must be on the path
 
 ## Extension Settings
 
@@ -48,6 +53,7 @@ No extension settings
 ## Known Issues
 
 -   Jump to path does not accept environment variables
+-   Output channel is not colored. While this can be fixed, it may make more sense to install [Output Colorizer](https://marketplace.visualstudio.com/items?itemName=IBM.output-colorizer)
 
 Issues or requests are welcome on [Github](https://github.com/julwrites/VSCode_Explorer)
 
@@ -55,7 +61,7 @@ Issues or requests are welcome on [Github](https://github.com/julwrites/VSCode_E
 
 What's New?
 
--   Ported to Typescript
+-   Added build functionality for Visual Studio projects and Makefiles
 
 ## Contributing
 

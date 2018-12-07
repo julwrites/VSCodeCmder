@@ -1,6 +1,6 @@
 import { Memento, OutputChannel } from 'vscode';
 import { ChildProcess } from 'child_process';
-import { win } from './globals';
+import { windows, linux, darwin } from './globals';
 var vscode = require('vscode');
 var fs = require('fs');
 var path = require('path');
@@ -8,6 +8,15 @@ var ansi = require('ansi-colors');
 var globals = require('./globals.js');
 var commandExists = require('command-exists');
 var spawn = require('cross-spawn');
+
+var build_tool: string;
+var build_proj: string[];
+
+var proj_map: Record<string, string[]> = {
+    'msbuild': ['.sln', '.vcxproj'],
+    'make': ['Makefile'],
+    'xcode': ['.xcode', 'xcodeproj']
+};
 
 function log_output(results: string, prefix: string) {
     let outputChannel = globals.OBJ_OUTPUT;
@@ -23,9 +32,6 @@ function log_output(results: string, prefix: string) {
 
     outputChannel.appendLine(prefix + '\t' + output);
 }
-
-var build_tool: string = win() ? 'msbuild' : 'make';
-var build_proj: string[] = win() ? ['.sln', '.vcxproj'] : ['Makefile'];
 
 function build_project(path: string, params: string[]) {
     let outputChannel: OutputChannel = globals.OBJ_OUTPUT;
@@ -159,16 +165,53 @@ var load = function (state: Memento) {
         });
 };
 
+function check_build_tool(valid_tools: string[]) {
+    for (let value of valid_tools) {
+        build_tool = value;
+
+        if (commandExists.sync(build_tool)) {
+            return true;
+        }
+    }
+
+    vscode.window.showErrorMessage('Could not find ' + valid_tools.join(', '));
+    return false;
+}
+
+function windows_build_env() {
+    return check_build_tool(['msbuild']);
+}
+
+function linux_build_env() {
+    return check_build_tool(['make']);
+}
+
+function darwin_build_env() {
+    return check_build_tool(['xcode', 'make']);
+}
+
+
+function build_env() {
+    if (windows() && windows_build_env()) {
+        build_proj = proj_map[build_tool];
+    }
+    else if (linux() && linux_build_env()) {
+        build_proj = proj_map[build_tool];
+    }
+    else if (darwin() && darwin_build_env()) {
+        build_proj = proj_map[build_tool];
+    }
+    else { return false; }
+
+    return true;
+}
 
 var trigger_build = function (state: Memento) {
     console.log('Starting up MSBuild Trigger');
 
     vscode.window.setStatusBarMessage('Scanning for msbuild', globals.TIMEOUT);
 
-    commandExists('msbuild', function (err: Error, commandExists: boolean) {
-        if (err || !commandExists) {
-            vscode.window.showErrorMessage('Could not find msbuild');
-        }
+    if (build_env()) {
 
         load(state).then(
             () => {
@@ -194,7 +237,7 @@ var trigger_build = function (state: Memento) {
                 }
             }
         );
-    });
+    }
 };
 
 exports.build = trigger_build;

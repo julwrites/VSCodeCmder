@@ -10,9 +10,9 @@ var commandExists = require('command-exists');
 var spawn = require('cross-spawn');
 
 var build_tool: string;
-var build_proj: string[];
+var build_ext: string[];
 
-var proj_map: Record<string, string[]> = {
+var ext_map: Record<string, string[]> = {
     'msbuild': ['.sln', '.vcxproj'],
     'make': ['Makefile'],
     'xcode': ['.xcode', 'xcodeproj']
@@ -74,7 +74,7 @@ function build_proj_list_recursive(startPath: string) {
             //     }
             // }
 
-            for (let value of build_proj) {
+            for (let value of build_ext) {
                 if (file.includes(value) &&
                     (file.length === (file.lastIndexOf(value) + value.length))) {
                     projList.push(file);
@@ -191,13 +191,13 @@ function darwin_build_env() {
 
 function build_env() {
     if (windows() && windows_build_env()) {
-        build_proj = proj_map[build_tool];
+        build_ext = ext_map[build_tool];
     }
     else if (linux() && linux_build_env()) {
-        build_proj = proj_map[build_tool];
+        build_ext = ext_map[build_tool];
     }
     else if (darwin() && darwin_build_env()) {
-        build_proj = proj_map[build_tool];
+        build_ext = ext_map[build_tool];
     }
     else { return false; }
 

@@ -73,12 +73,9 @@ function build_proj_list_recursive(startPath: string) {
             build_proj.forEach((value: string) => { if (file.includes(value)) { projList.push(file); } });
 
             let stats = fs.statSync(file);
+
             if (stats.isDirectory()) {
-                build_proj_list_recursive(file).forEach((file) => {
-                    if (file.includes('.sln') || (file.includes('.vcxproj') && !file.includes('.vcxproj.'))) {
-                        projList.push(file);
-                    }
-                });
+                build_proj_list_recursive(file).forEach((value: string) => { if (file.includes(value)) { projList.push(file); } });
             }
         });
     } catch (error) {
@@ -207,9 +204,9 @@ function build_env() {
 }
 
 var trigger_build = function (state: Memento) {
-    console.log('Starting up MSBuild Trigger');
+    console.log('Starting up C++ Build');
 
-    vscode.window.setStatusBarMessage('Scanning for msbuild', globals.TIMEOUT);
+    vscode.window.setStatusBarMessage('Scanning for build tools', globals.TIMEOUT);
 
     if (build_env()) {
 
@@ -221,7 +218,7 @@ var trigger_build = function (state: Memento) {
 
                 if (projList !== undefined) {
                     if (projList.length === 0) {
-                        vscode.window.showErrorMessage('Could not find any Visual Studio projects to build');
+                        vscode.window.showErrorMessage('Could not find any C++ projects to build');
                         return;
                     }
 

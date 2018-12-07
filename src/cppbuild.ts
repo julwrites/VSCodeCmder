@@ -70,12 +70,18 @@ function build_proj_list_recursive(startPath: string) {
         fs.readdirSync(startPath).forEach((file: string) => {
             file = path.join(startPath, file);
 
-            build_proj.forEach((value: string) => { if (file.includes(value)) { projList.push(file); } });
+            build_proj.forEach((value: string) => {
+                if (file.includes(value)) {
+                    projList.push(file);
+                }
+            });
 
             let stats = fs.statSync(file);
 
             if (stats.isDirectory()) {
-                build_proj_list_recursive(file).forEach((value: string) => { if (file.includes(value)) { projList.push(file); } });
+                build_proj_list_recursive(file).forEach((value: string) => {
+                    projList.push(file);
+                });
             }
         });
     } catch (error) {

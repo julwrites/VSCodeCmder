@@ -18,17 +18,15 @@ var proj_map: Record<string, string[]> = {
     'xcode': ['.xcode', 'xcodeproj']
 };
 
+// var ignore: string[] = [
+//     "CMakeFiles", ".git"
+// ];
+
 function log_output(results: string, prefix: string) {
     let outputChannel = globals.OBJ_OUTPUT;
 
+    // We let IBM Output Colorizer handle coloring
     let output = ansi.unstyle(results as string).trim();
-
-    // if (output.toLowerCase().includes(' warning ')) {
-    //     output = ansi.yellow(output);
-    // }
-    // else if (output.toLowerCase().includes(' error ')) {
-    //     output = ansi.red(output);
-    // }
 
     outputChannel.appendLine(prefix + '\t' + output);
 }
@@ -70,8 +68,15 @@ function build_proj_list_recursive(startPath: string) {
         fs.readdirSync(startPath).forEach((file: string) => {
             file = path.join(startPath, file);
 
+            // for (let value of ignore) {
+            //     if (file.includes(value)) {
+            //         return;
+            //     }
+            // }
+
             for (let value of build_proj) {
-                if (file.includes(value)) {
+                if (file.includes(value) &&
+                    (file.length === (file.lastIndexOf(value) + value.length))) {
                     projList.push(file);
                 }
             }

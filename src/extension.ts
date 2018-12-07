@@ -1,18 +1,13 @@
-import { Memento, ExtensionContext } from "vscode";
+import { Memento, ExtensionContext } from 'vscode';
+import { win } from './globals';
 
 // Includes
-var vscode = require("vscode");
+var vscode = require('vscode');
 
-var directory = require("./directory.js");
-var bookmarks = require("./bookmarks.js");
-var globals = require("./globals.js");
-var msbuilder = require("./msbuilder.js");
-
-var platform = require('os').platform();
-
-function isWindows() {
-    return platform.toLowerCase().includes("win");
-}
+var directory = require('./directory.js');
+var bookmarks = require('./bookmarks.js');
+var globals = require('./globals.js');
+var cppbuild = require('./cppbuild.js');
 
 function initialize(state: Memento) {
     globals.OBJ_OUTPUT = vscode.window.createOutputChannel(globals.STR_CODECMDER);
@@ -21,32 +16,33 @@ function initialize(state: Memento) {
 
 // this method is called when your extension is activated
 function activate(context: ExtensionContext) {
-    console.log("File Explorer is now available in VS Code");
+    console.log('File Explorer is now available in VS Code');
 
     var state = context.globalState;
 
     // Commands matching that of that in package.json
-    var navCommand = vscode.commands.registerCommand("extension.navigate",
-        () => { directory.navigate(state) });
-    var navCommand = vscode.commands.registerCommand("extension.jumpToPath",
-        () => { directory.chdir(state) });
-    var setCommand = vscode.commands.registerCommand("extension.setRoot",
-        () => { directory.set_root(state) });
-    var addCommand = vscode.commands.registerCommand("extension.addBookmark",
-        () => { bookmarks.add_bookmark(state) });
-    var delCommand = vscode.commands.registerCommand("extension.removeBookmark",
-        () => { bookmarks.del_bookmark(state) });
-    var clrCommand = vscode.commands.registerCommand("extension.clearBookmarks",
-        () => { bookmarks.clr_bookmarks(state) });
+    var navCommand = vscode.commands.registerCommand('extension.navigate',
+        () => { directory.navigate(state); });
+    var jmpCommand = vscode.commands.registerCommand('extension.jumpToPath',
+        () => { directory.chdir(state); });
+    var setCommand = vscode.commands.registerCommand('extension.setRoot',
+        () => { directory.set_root(state); });
+    var addCommand = vscode.commands.registerCommand('extension.addBookmark',
+        () => { bookmarks.add_bookmark(state); });
+    var delCommand = vscode.commands.registerCommand('extension.removeBookmark',
+        () => { bookmarks.del_bookmark(state); });
+    var clrCommand = vscode.commands.registerCommand('extension.clearBookmarks',
+        () => { bookmarks.clr_bookmarks(state); });
 
-    if (isWindows()) {
-        var bldCommand = vscode.commands.registerCommand("extension.buildVcxproj",
-            () => { msbuilder.build(state) });
+    if (win()) {
+        var bldCommand = vscode.commands.registerCommand('extension.buildproj',
+            () => { cppbuild.build(state); });
         context.subscriptions.push(bldCommand);
     }
 
     // Add to a list of disposables that die when the extension deactivates
     context.subscriptions.push(navCommand);
+    context.subscriptions.push(jmpCommand);
     context.subscriptions.push(setCommand);
     context.subscriptions.push(addCommand);
     context.subscriptions.push(delCommand);
@@ -58,7 +54,7 @@ exports.activate = activate;
 
 // this method is called when your extension is deactivated
 function deactivate() {
-    console.log("Deactivating extension");
+    console.log('Deactivating extension');
 }
 
 exports.deactivate = deactivate;

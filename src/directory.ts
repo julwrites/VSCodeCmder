@@ -1,5 +1,5 @@
-import { Memento } from "vscode";
-import { Bookmark } from "./bookmarks";
+import { Memento } from 'vscode';
+import { Bookmark } from './bookmarks';
 
 var vscode = require('vscode');
 var fs = require('fs');

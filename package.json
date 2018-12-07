@@ -55,7 +55,7 @@
                 "title": "Bookmark: Clear All"
             },
             {
-                "command": "extension.buildVcxproj",
+                "command": "extension.buildproj",
                 "title": "Build a Visual Studio Project"
             }
         ],
@@ -71,7 +71,7 @@
                 "mac": "ctrl+cmd+j"
             },
             {
-                "command": "extension.buildVcxproj",
+                "command": "extension.buildproj",
                 "key": "ctrl+shift+b",
                 "mac": "ctrl+shift+b"
             }
@@ -80,9 +80,10 @@
     "dependencies": {
         "ansi-colors": "^3.2.1",
         "clone": "^2.0.0",
+        "command-exists": "^1.2.8",
+        "cross-spawn": "^6.0.5",
         "directory-tree": "^1.2.1",
         "fs": "^0.0.1-security",
-        "msbuild": "^1.0.3",
         "url-parse": "^1.4.3"
     },
     "scripts": {

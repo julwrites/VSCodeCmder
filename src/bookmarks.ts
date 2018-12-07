@@ -1,9 +1,9 @@
-import { Memento } from "vscode";
+import { Memento } from 'vscode';
 
-var vscode = require("vscode");
+var vscode = require('vscode');
 
-var traversal = require("./traversal");
-var globals = require("./globals");
+var traversal = require('./traversal');
+var globals = require('./globals');
 
 export class Bookmark {
     name: string;
@@ -20,7 +20,7 @@ function add(state: Memento, name: string, path: string) {
         return;
     }
 
-    console.log("Committing bookmark to state");
+    console.log('Committing bookmark to state');
 
     // Registers a name to a navPath
     var bookmarkList: Bookmark[] = <Bookmark[]><any>state.get(globals.TAG_BOOKMARKS);
@@ -42,7 +42,7 @@ function add(state: Memento, name: string, path: string) {
 
     state.update(globals.TAG_BOOKMARKS, bookmarkList);
 
-    vscode.window.setStatusBarMessage("Added " + name + " => " + path, globals.TIMEOUT);
+    vscode.window.setStatusBarMessage('Added ' + name + ' => ' + path, globals.TIMEOUT);
 }
 
 var nav_path = function (state: Memento, name: string) {
@@ -50,23 +50,23 @@ var nav_path = function (state: Memento, name: string) {
         return;
     }
 
-    console.log("Navigation for bookmark adding");
+    console.log('Navigation for bookmark adding');
 
     let root = state.get(globals.TAG_ROOTPATH);
-    let start = vscode.workspace.rootPath === undefined ? (root === undefined ? "" : root) : vscode.workspace.rootPath;
+    let start = vscode.workspace.rootPath === undefined ? (root === undefined ? '' : root) : vscode.workspace.rootPath;
 
     // Does a.navigate using the current navPath if available
     traversal.traverse(start, [], add.bind(null, state, name));
 };
 
 var query_name = function () {
-    console.log("Query for a bookmark name");
+    console.log('Query for a bookmark name');
 
-    return vscode.window.showInputBox({ prompt: "Enter a name" });
+    return vscode.window.showInputBox({ prompt: 'Enter a name' });
 };
 
 var add_bookmark = function (state: Memento) {
-    console.log("Starting up navigation for adding bookmark");
+    console.log('Starting up navigation for adding bookmark');
 
     query_name()
         .then(
@@ -81,7 +81,7 @@ function del(state: Memento, name: string) {
         return;
     }
 
-    console.log("Committing deletion of bookmark to state");
+    console.log('Committing deletion of bookmark to state');
 
     var bookmarkList: Bookmark[] = <Bookmark[]><any>state.get(globals.TAG_BOOKMARKS);
     var out: Bookmark[] = [];
@@ -94,15 +94,15 @@ function del(state: Memento, name: string) {
 
     state.update(globals.TAG_BOOKMARKS, out);
 
-    vscode.window.setStatusBarMessage("Removed " + name, globals.TIMEOUT);
+    vscode.window.setStatusBarMessage('Removed ' + name, globals.TIMEOUT);
 }
 
 var del_bookmark = function (state: Memento) {
-    console.log("Starting up delete bookmark listing");
+    console.log('Starting up delete bookmark listing');
 
     var bookmarkList: Bookmark[] = <Bookmark[]><any>state.get(globals.TAG_BOOKMARKS);
     if (bookmarkList === undefined) {
-        vscode.window.setStatusBarMessage("No bookmarkList", globals.TIMEOUT);
+        vscode.window.setStatusBarMessage('No bookmarkList', globals.TIMEOUT);
         return;
     }
 
@@ -120,12 +120,12 @@ var del_bookmark = function (state: Memento) {
 };
 
 var clr_bookmarkList = function (state: Memento) {
-    console.log("Clearing all bookmarkList");
+    console.log('Clearing all bookmarkList');
 
     // Doesn't matter what bookmarkList there are, we'll just replace with empty
     state.update(globals.TAG_BOOKMARKS, []);
 
-    vscode.window.setStatusBarMessage("Removed all Bookmarks", globals.TIMEOUT);
+    vscode.window.setStatusBarMessage('Removed all Bookmarks', globals.TIMEOUT);
 };
 
 exports.add_bookmark = add_bookmark;

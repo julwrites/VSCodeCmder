@@ -1,4 +1,4 @@
-import { Stats } from "fs";
+import { Stats } from 'fs';
 
 var vscode = require('vscode');
 var fs = require('fs');

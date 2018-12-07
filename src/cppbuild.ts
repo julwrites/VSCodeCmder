@@ -14,12 +14,12 @@ function log_output(results: string, prefix: string) {
 
     let output = ansi.unstyle(results as string).trim();
 
-    if (output.toLowerCase().includes(' warning ')) {
-        output = ansi.yellow(output);
-    }
-    else if (output.toLowerCase().includes(' error ')) {
-        output = ansi.red(output);
-    }
+    // if (output.toLowerCase().includes(' warning ')) {
+    //     output = ansi.yellow(output);
+    // }
+    // else if (output.toLowerCase().includes(' error ')) {
+    //     output = ansi.red(output);
+    // }
 
     outputChannel.appendLine(prefix + '\t' + output);
 }

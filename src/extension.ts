@@ -12,6 +12,8 @@ var cppbuild = require('./cppbuild.js');
 function initialize(state: Memento) {
     globals.OBJ_OUTPUT = vscode.window.createOutputChannel(globals.STR_CODECMDER);
     globals.OBJ_OUTPUT.show(false);
+
+    state.update(globals.CPP_PROJ, []);
 }
 
 // this method is called when your extension is activated

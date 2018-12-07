@@ -1,5 +1,5 @@
 {
-    "name": "vscodecmder",
+    "name": "codecmder",
     "displayName": "VSCodeCmder",
     "description": "Commands to make it easier to use VSCode in a keyboard-only workflow",
     "version": "0.0.1",

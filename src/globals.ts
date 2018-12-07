@@ -10,7 +10,7 @@ exports.TAG_VCXPROJS = 'codecmder.vcxproj';
 // Strings
 exports.STR_BOOKMARK = 'Bookmark: ';
 exports.STR_MRULIST = 'Recently Opened: ';
-exports.STR_VCXPROJ = 'Project: ';
+exports.STR_CPPPROJ = 'Project: ';
 exports.STR_CODECMDER = 'VSCodeCmder';
 // Shared objects
 exports.OBJ_OUTPUT = undefined;

@@ -54,7 +54,7 @@ By default, VSCodeCmder searches the system and user Path env, but this can be o
 
 ## Requirements
 
-For CPP building, msbuild or make must be on the path
+Recommended to also install [IBM.OutputColorizer](https://marketplace.visualstudio.com/items?itemName=IBM.output-colorizer)
 
 ## Extension Settings
 

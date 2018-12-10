@@ -1,4 +1,4 @@
-import { OutputChannel, FileSystemWatcher, Memento, WorkspaceConfiguration } from "vscode";
+import { OutputChannel, FileSystemWatcher, Memento } from "vscode";
 
 // Global defines
 export let TIMEOUT: number = 5000;

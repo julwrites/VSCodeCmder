@@ -2,7 +2,7 @@
 
 ![status: active](https://img.shields.io/badge/status-active-green.svg)
 
-VSCodeCmder adds some commands for navigating to files/directory from VSCode's Command Palette.
+VSCodeCmder adds some commands to make VSCode easier to use in a keyboard-only workflow
 
 ## Features
 
@@ -62,6 +62,7 @@ Issues or requests are welcome on [Github](https://github.com/julwrites/VSCode_E
 What's New?
 
 -   Added build functionality for Visual Studio projects and Makefiles
+-   Added caching and file watching functionality to speed up build calls
 
 ## Contributing
 

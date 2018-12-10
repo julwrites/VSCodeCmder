@@ -5,7 +5,7 @@ var vscode = require('vscode');
 var fs = require('fs');
 
 var traversal = require('./traversal');
-var globals = require('./globals');
+var global = require('./global');
 var bookmarks = require('./bookmarks');
 
 
@@ -13,7 +13,7 @@ var bookmarks = require('./bookmarks');
 function resolve_bookmark(state: Memento, navPath: string) {
     console.log('Checking if this is bookmark');
 
-    let bookmarks: Bookmark[] = <Bookmark[]><any>state.get(globals.TAG_BOOKMARKS);
+    let bookmarks: Bookmark[] = <Bookmark[]><any>state.get(global.TAG_BOOKMARKS);
     bookmarks = bookmarks === undefined ? [] : bookmarks;
 
     let bookmark = bookmarks.find(function (bookmark) {
@@ -28,14 +28,14 @@ function resolve_bookmark(state: Memento, navPath: string) {
 function resolve_mrulist(state: Memento, navPath: string) {
     console.log('Checking if this is in MRU');
 
-    let mruList: string[] = <string[]><any>state.get(globals.TAG_MRULIST);
+    let mruList: string[] = <string[]><any>state.get(global.TAG_MRULIST);
     mruList = mruList === undefined ? [] : mruList;
 
     let mru = mruList.find(function (mru: string) {
         return mru === navPath;
     });
 
-    if (mru !== undefined) { navPath = mru.replace(globals.STR_MRULIST, ''); }
+    if (mru !== undefined) { navPath = mru.replace(global.STR_MRULIST, ''); }
 
     return navPath;
 }
@@ -44,12 +44,12 @@ function update_mrulist(state: Memento) {
     console.log('Folder change, updating MRU');
 
     if (vscode.workspace.rootPath !== undefined) {
-        let mruList: string[] = <string[]><any>state.get(globals.TAG_MRULIST);
+        let mruList: string[] = <string[]><any>state.get(global.TAG_MRULIST);
         mruList = mruList === undefined ? [] : mruList;
 
-        if (mruList.length >= globals.MRU_MAX) { mruList.pop(); }
+        if (mruList.length >= global.MRU_MAX) { mruList.pop(); }
 
-        var mru = globals.STR_MRULIST + vscode.workspace.rootPath;
+        var mru = global.STR_MRULIST + vscode.workspace.rootPath;
 
         if (mruList.includes(mru)) {
             mruList.splice(mruList.indexOf(mru), 1);
@@ -57,7 +57,7 @@ function update_mrulist(state: Memento) {
 
         mruList = [mru].concat(mruList);
 
-        state.update(globals.TAG_MRULIST, mruList);
+        state.update(global.TAG_MRULIST, mruList);
     }
 }
 
@@ -65,7 +65,7 @@ function dead_path(state: Memento, navPath: string) {
     console.log('Found a dead path, removing from logs');
 
     // Remove this dead link from bookmarks
-    let bookmarkList: Bookmark[] = <Bookmark[]><any>state.get(globals.TAG_BOOKMARKS);
+    let bookmarkList: Bookmark[] = <Bookmark[]><any>state.get(global.TAG_BOOKMARKS);
 
     if (bookmarkList !== undefined) {
         let bookmark = bookmarkList.find(function (bookmark) {
@@ -78,16 +78,16 @@ function dead_path(state: Memento, navPath: string) {
     }
 
     // Remove this dead link from MRU
-    let mruList: string[] = <string[]><any>state.get(globals.TAG_MRULIST);
+    let mruList: string[] = <string[]><any>state.get(global.TAG_MRULIST);
 
     if (mruList !== undefined) {
-        var mru = globals.STR_MRULIST + navPath;
+        var mru = global.STR_MRULIST + navPath;
 
         if (mruList.includes(mru)) {
             mruList.splice(mruList.indexOf(mru), 1);
         }
 
-        state.update(globals.TAG_MRULIST, mruList);
+        state.update(global.TAG_MRULIST, mruList);
     }
 }
 
@@ -142,20 +142,13 @@ var chdir = function (state: Memento) {
 var navigate = function (state: Memento) {
     console.log('Entering navigate');
 
-    let root = state.get(globals.TAG_ROOTPATH);
-    let start =
-        vscode.workspace.rootPath === undefined
-            ? root === undefined
-                ? ''
-                : root
-            : vscode.workspace.rootPath;
     let names: string[] = [];
 
-    console.log('Current root path: ' + start);
+    console.log('Current root path: ' + vscode.workspace.rootPath);
 
     console.log('Populating bookmarks');
 
-    let bookmarkList: Bookmark[] = <Bookmark[]><any>state.get(globals.TAG_BOOKMARKS);
+    let bookmarkList: Bookmark[] = <Bookmark[]><any>state.get(global.TAG_BOOKMARKS);
     bookmarkList = bookmarkList === undefined ? [] : bookmarkList;
     bookmarkList.forEach(function (bookmark: Bookmark) {
         names.push(bookmark.name);
@@ -165,7 +158,7 @@ var navigate = function (state: Memento) {
 
     console.log('Populating MRU');
 
-    let mruList: string[] = <string[]><any>state.get(globals.TAG_MRULIST);
+    let mruList: string[] = <string[]><any>state.get(global.TAG_MRULIST);
     mruList = mruList === undefined ? [] : mruList;
     mruList.forEach(function (mru: string) {
         names.push(mru);
@@ -176,46 +169,9 @@ var navigate = function (state: Memento) {
     console.log('Starting navigate');
 
     // Does a navigate using the current navPath if available
-    traversal.traverse(start, names, open_path.bind(null, state));
-};
-
-function set(state: Memento, navPath: string) {
-    if (navPath === undefined) { return; }
-
-    console.log('Committing ' + navPath + ' to state');
-
-    // Save navPath into the config
-    state.update(globals.TAG_ROOTPATH, navPath);
-
-    vscode.window.setStatusBarMessage(
-        'Setting root path to ' + navPath,
-        globals.TIMEOUT
-    );
-}
-
-var set_root = function (state: Memento) {
-    console.log('Starting up navigation for set root');
-
-    let root = state.get(globals.TAG_ROOTPATH);
-    let start =
-        vscode.workspace.rootPath === undefined
-            ? root === undefined
-                ? ''
-                : root
-            : vscode.workspace.rootPath;
-
-    let bookmarks: Bookmark[] = <Bookmark[]><any>state.get(globals.TAG_BOOKMARKS);
-    bookmarks = bookmarks === undefined ? [] : bookmarks;
-    let names: string[] = [];
-    bookmarks.forEach(function (bookmark) {
-        names.push(bookmark.name);
-    });
-
-    // Does a navigate using the current navPath if available
-    traversal.traverse(start, names, set.bind(null, state));
+    traversal.traverse(vscode.workspace.rootPath, names, open_path.bind(null, state));
 };
 
 exports.chdir = chdir;
 exports.navigate = navigate;
-exports.set_root = set_root;
 exports.open_path = open_path;

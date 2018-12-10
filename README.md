@@ -40,7 +40,17 @@ Bookmark:
 Build C++ Project:
 
 - Build:
-    - Searches the workspace for C++ project files and attempts to run msbuild or make
+    - Searches the workspace for C++ project files and runs build
+
+By default, VSCodeCmder searches the system and user Path env, but this can be overwritten in settings
+
+```
+"codecmder.buildtool": {
+    "msbuild": "C:\\Program Files (x86)\\Microsoft Visual Studio\\ ... \\MSBuild.exe", 
+    "make" : "/bin/make"
+    ... 
+}
+```
 
 ## Requirements
 

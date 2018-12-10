@@ -1,11 +1,11 @@
-import { Memento, OutputChannel, Uri, FileSystemWatcher } from 'vscode';
+import { Memento, OutputChannel, Uri, FileSystemWatcher, WorkspaceConfiguration } from 'vscode';
 import { ChildProcess } from 'child_process';
-import { windows, linux, darwin } from './globals';
+import { fstatSync } from 'fs';
 var vscode = require('vscode');
 var fs = require('fs');
 var path = require('path');
 var ansi = require('ansi-colors');
-var globals = require('./globals.js');
+var global = require('./global.js');
 var clone = require('clone');
 var commandExists = require('command-exists');
 var spawn = require('cross-spawn');
@@ -14,16 +14,26 @@ var build_tool: string = "";
 var build_ext: string[] = [];
 var proj_list: string[] = [];
 
+var msbuild: string = 'msbuild';
+var make: string = 'make';
+var xcode: string = 'xcode';
+
+var cmd_map: Record<string, string> = {
+    msbuild: 'msbuild',
+    make: 'make',
+    xcode: 'xcode'
+}
+
 var opt_map: Record<string, string[]> = {
-    'msbuild': [],
-    'make': ['-f'],
-    'xcode': []
+    msbuild: [],
+    make: ['-f'],
+    xcode: []
 }
 
 var ext_map: Record<string, string[]> = {
-    'msbuild': ['.sln', '.vcxproj'],
-    'make': ['.Makefile'],
-    'xcode': ['.xcode', '.xcodeproj']
+    msbuild: ['.sln', '.vcxproj'],
+    make: ['.Makefile'],
+    xcode: ['.xcode', '.xcodeproj']
 };
 
 // var ignore: string[] = [
@@ -31,7 +41,7 @@ var ext_map: Record<string, string[]> = {
 // ];
 
 function log_output(results: string) {
-    let outputChannel = globals.OBJ_OUTPUT;
+    let outputChannel = global.OBJ_OUTPUT;
 
     // We let IBM Output Colorizer handle coloring
     let output = ansi.unstyle(results as string).trim();
@@ -40,7 +50,7 @@ function log_output(results: string) {
 }
 
 function build_project(path: string, params: string[]) {
-    let outputChannel: OutputChannel = globals.OBJ_OUTPUT;
+    let outputChannel: OutputChannel = global.OBJ_OUTPUT;
 
     outputChannel.show();
     outputChannel.clear();
@@ -185,7 +195,7 @@ function load(state: Memento) {
                                 let watcher: FileSystemWatcher = vscode.workspace.createFileSystemWatcher(glob);
                                 watcher.onDidCreate(fileCreated);
                                 watcher.onDidDelete(fileDeleted);
-                                globals.OBJ_CPPPROJ_WATCHER = watcher;
+                                global.OBJ_CPPPROJ_WATCHER = watcher;
 
                                 fulfill(projList);
                             }
@@ -203,9 +213,29 @@ function load(state: Memento) {
                 reject();
             }
         });
-};
+}
 
-function check_build_tool(valid_tools: string[]) {
+function try_cfg(valid_tools: string[]) {
+    let config: WorkspaceConfiguration = vscode.workspace.getConfiguration(global.TAG_BUILDTOOL);
+
+    for (let value of valid_tools) {
+        if (config.has(value)) {
+            let cmdPath: string = <string><any>config.get(value);
+
+            let stat = fs.statSync(cmdPath);
+            if (stat.isFile()) {
+                build_tool = value;
+                cmd_map[value] = cmdPath;
+
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+function try_cmd(valid_tools: string[]) {
     for (let value of valid_tools) {
         build_tool = value;
 
@@ -218,27 +248,8 @@ function check_build_tool(valid_tools: string[]) {
     return false;
 }
 
-function windows_build_env() {
-    return check_build_tool(['msbuild']);
-}
-
-function linux_build_env() {
-    return check_build_tool(['make']);
-}
-
-function darwin_build_env() {
-    return check_build_tool(['xcode', 'make']);
-}
-
-
 function build_env() {
-    if (windows() && windows_build_env()) {
-        build_ext = ext_map[build_tool];
-    }
-    else if (linux() && linux_build_env()) {
-        build_ext = ext_map[build_tool];
-    }
-    else if (darwin() && darwin_build_env()) {
+    if (try_cfg([msbuild, make, xcode]) || try_cmd([msbuild, make, xcode])) {
         build_ext = ext_map[build_tool];
     }
     else { return false; }
@@ -249,14 +260,12 @@ function build_env() {
 var trigger_build = function (state: Memento) {
     console.log('Starting up C++ Build');
 
-    vscode.window.setStatusBarMessage('Scanning for build tools', globals.TIMEOUT);
+    vscode.window.setStatusBarMessage('Scanning for build tools', global.TIMEOUT);
 
     if (build_env()) {
 
         load(state).then(
             (value) => {
-                let root: string = <string><any>state.get(globals.TAG_ROOTPATH);
-                let start: string = vscode.workspace.rootPath === undefined ? (root === undefined ? '' : root) : vscode.workspace.rootPath;
                 let projList: string[] = <string[]><any>value;
 
                 if (projList !== undefined) {
@@ -272,7 +281,7 @@ var trigger_build = function (state: Memento) {
                                     return;
                                 }
 
-                                build_project(path.join(start, val), []);
+                                build_project(path.join(vscode.workspace.rootPath, val), []);
                             });
                 }
             }

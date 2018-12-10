@@ -19,63 +19,74 @@
     ],
     "activationEvents": [
         "*",
-        "onCommand:extension.navigate",
-        "onCommand:extension.jumpToPath",
-        "onCommand:extension.setRoot",
-        "onCommand:extension.addBookmark",
-        "onCommand:extension.removeBookmark",
-        "onCommand:extension.clearBookmark",
-        "onCommand:extension.buildproj"
+        "onCommand:codecmder.navigate",
+        "onCommand:codecmder.jumpToPath",
+        "onCommand:codecmder.setRoot",
+        "onCommand:codecmder.addBookmark",
+        "onCommand:codecmder.removeBookmark",
+        "onCommand:codecmder.clearBookmark",
+        "onCommand:codecmder.buildproj"
     ],
     "main": "./out/extension",
     "contributes": {
         "commands": [
             {
-                "command": "extension.navigate",
+                "command": "codecmder.navigate",
                 "title": "Navigate"
             },
             {
-                "command": "extension.jumpToPath",
+                "command": "codecmder.jumpToPath",
                 "title": "Jump To Path"
             },
             {
-                "command": "extension.setRoot",
+                "command": "codecmder.setRoot",
                 "title": "Set Root Path"
             },
             {
-                "command": "extension.addBookmark",
+                "command": "codecmder.addBookmark",
                 "title": "Bookmark: Add"
             },
             {
-                "command": "extension.removeBookmark",
+                "command": "codecmder.removeBookmark",
                 "title": "Bookmark: Remove"
             },
             {
-                "command": "extension.clearBookmarks",
+                "command": "codecmder.clearBookmarks",
                 "title": "Bookmark: Clear All"
             },
             {
-                "command": "extension.buildproj",
+                "command": "codecmder.buildproj",
                 "title": "Build a C++ Project"
             }
         ],
         "keybindings": [
             {
-                "command": "extension.navigate",
+                "command": "codecmder.navigate",
                 "key": "ctrl+alt+n",
                 "mac": "ctrl+cmd+n"
             },
             {
-                "command": "extension.jumpToPath",
+                "command": "codecmder.jumpToPath",
                 "key": "ctrl+alt+j",
                 "mac": "ctrl+cmd+j"
             },
             {
-                "command": "extension.buildproj",
+                "command": "codecmder.buildproj",
                 "key": "ctrl+shift+b",
                 "mac": "ctrl+shift+b"
             }
-        ]
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "VSCodeCmder configuration",
+            "properties": {
+                "codecmder.buildToolPath": {
+                    "type": "object",
+                    "default": "e.g. msbuild, make, xcode",
+                    "description": "Path to the project build tool (e.g. msbuild, make, xcode)"
+                }
+            }
+        }
     },
     "dependencies": {
         "ansi-colors": "^3.2.2",

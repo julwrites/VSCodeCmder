@@ -5,16 +5,16 @@ var vscode = require('vscode');
 
 var directory = require('./directory.js');
 var bookmarks = require('./bookmarks.js');
-var globals = require('./globals.js');
+var global = require('./global.js');
 var cppbuild = require('./cppbuild.js');
 
 function initialize(state: Memento) {
-    globals.STATE = state;
+    global.STATE = state;
 
-    globals.OBJ_OUTPUT = vscode.window.createOutputChannel(globals.STR_CODECMDER);
-    globals.OBJ_OUTPUT.show(false);
+    global.OBJ_OUTPUT = vscode.window.createOutputChannel(global.STR_CODECMDER);
+    global.OBJ_OUTPUT.show(false);
 
-    state.update(globals.TAG_CPPPROJ, []);
+    state.update(global.TAG_CPPPROJ, []);
 }
 
 // this method is called when your extension is activated
@@ -24,25 +24,22 @@ function activate(context: ExtensionContext) {
     var state = context.globalState;
 
     // Commands matching that of that in package.json
-    var navCommand = vscode.commands.registerCommand('extension.navigate',
+    var navCommand = vscode.commands.registerCommand('codecmder.navigate',
         () => { directory.navigate(state); });
-    var jmpCommand = vscode.commands.registerCommand('extension.jumpToPath',
+    var jmpCommand = vscode.commands.registerCommand('codecmder.jumpToPath',
         () => { directory.chdir(state); });
-    var setCommand = vscode.commands.registerCommand('extension.setRoot',
-        () => { directory.set_root(state); });
-    var addCommand = vscode.commands.registerCommand('extension.addBookmark',
+    var addCommand = vscode.commands.registerCommand('codecmder.addBookmark',
         () => { bookmarks.add_bookmark(state); });
-    var delCommand = vscode.commands.registerCommand('extension.removeBookmark',
+    var delCommand = vscode.commands.registerCommand('codecmder.removeBookmark',
         () => { bookmarks.del_bookmark(state); });
-    var clrCommand = vscode.commands.registerCommand('extension.clearBookmarks',
+    var clrCommand = vscode.commands.registerCommand('codecmder.clearBookmarks',
         () => { bookmarks.clr_bookmarks(state); });
-    var bldCommand = vscode.commands.registerCommand('extension.buildproj',
+    var bldCommand = vscode.commands.registerCommand('codecmder.buildproj',
         () => { cppbuild.build(state); });
 
     // Add to a list of disposables that die when the extension deactivates
     context.subscriptions.push(navCommand);
     context.subscriptions.push(jmpCommand);
-    context.subscriptions.push(setCommand);
     context.subscriptions.push(addCommand);
     context.subscriptions.push(delCommand);
     context.subscriptions.push(clrCommand);
@@ -56,9 +53,9 @@ exports.activate = activate;
 function deactivate() {
     console.log('Deactivating extension');
 
-    globals.OBJ_CPPPROJ_WATCHER.dispose();
+    global.OBJ_CPPPROJ_WATCHER.dispose();
 
-    globals.OBJ_OUTPUT.dispose();
+    global.OBJ_OUTPUT.dispose();
 }
 
 exports.deactivate = deactivate;

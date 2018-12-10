@@ -1,18 +1,18 @@
-import { OutputChannel, FileSystemWatcher, Memento } from "vscode";
+import { OutputChannel, FileSystemWatcher, Memento, WorkspaceConfiguration } from "vscode";
 
 // Global defines
 export let TIMEOUT: number = 5000;
 export let MRU_MAX: number = 5;
 export let DEFAULT_DEPTH: number = 2;
 // State tags
-export let TAG_ROOTPATH: string = 'codecmder.rootPath';
 export let TAG_MRULIST: string = 'codecmder.recent';
 export let TAG_BOOKMARKS: string = 'codecmder.bookmarks';
 export let TAG_CPPPROJ: string = 'codecmder.cppproj';
+export let TAG_BUILDTOOL: string = 'codecmder.buildToolPath';
+export let TAG_SETTINGS: string = 'settings';
 // Strings
 export let STR_BOOKMARK: string = 'Bookmark: ';
 export let STR_MRULIST: string = 'Recently Opened: ';
-export let STR_CPPPROJ: string = 'Project: ';
 export let STR_CODECMDER: string = 'VSCodeCmder';
 // Shared objects
 export let OBJ_STATE: Memento;

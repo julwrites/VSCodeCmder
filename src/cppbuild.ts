@@ -10,18 +10,13 @@ var commandExists = require('command-exists');
 var spawn = require('cross-spawn');
 
 var build_tool: string = "";
+var build_cmd: string = "";
 var build_ext: string[] = [];
 var proj_list: string[] = [];
 
 var msbuild: string = 'msbuild';
 var make: string = 'make';
 var xcode: string = 'xcode';
-
-var cmd_map: Record<string, string> = {
-    msbuild: 'msbuild',
-    make: 'make',
-    xcode: 'xcode'
-}
 
 var opt_map: Record<string, string[]> = {
     msbuild: [],
@@ -56,9 +51,9 @@ function build_project(path: string, params: string[]) {
 
     params = opt_map[build_tool].concat([path]).concat(params);
 
-    log_output([build_tool].concat(params).join(' '));
+    log_output([build_cmd].concat(params).join(' '));
 
-    let child: ChildProcess = spawn(build_tool, params);
+    let child: ChildProcess = spawn(build_cmd, params);
 
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
@@ -224,7 +219,7 @@ function try_cfg(valid_tools: string[]) {
             let stat = fs.statSync(cmdPath);
             if (stat.isFile()) {
                 build_tool = value;
-                cmd_map[value] = cmdPath;
+                build_cmd = cmdPath;
 
                 return true;
             }
@@ -236,9 +231,10 @@ function try_cfg(valid_tools: string[]) {
 
 function try_cmd(valid_tools: string[]) {
     for (let value of valid_tools) {
-        build_tool = value;
+        if (commandExists.sync(value)) {
+            build_tool = value;
+            build_cmd = value;
 
-        if (commandExists.sync(build_tool)) {
             return true;
         }
     }

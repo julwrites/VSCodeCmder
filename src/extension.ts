@@ -1,4 +1,4 @@
-import { Memento, ExtensionContext } from 'vscode';
+import { Memento, ExtensionContext, OutputChannel, FileSystemWatcher } from 'vscode';
 
 // Includes
 var vscode = require('vscode');
@@ -9,10 +9,14 @@ var globals = require('./globals.js');
 var cppbuild = require('./cppbuild.js');
 
 function initialize(state: Memento) {
+    globals.STATE = state;
+
     globals.OBJ_OUTPUT = vscode.window.createOutputChannel(globals.STR_CODECMDER);
     globals.OBJ_OUTPUT.show(false);
 
-    state.update(globals.CPP_PROJ, []);
+    globals.TAG_CPPPROJ_WATCHER = vscode.workspace.createFileSystemWatcher();
+
+    state.update(globals.TAG_CPPPROJ, []);
 }
 
 // this method is called when your extension is activated
@@ -53,6 +57,13 @@ exports.activate = activate;
 // this method is called when your extension is deactivated
 function deactivate() {
     console.log('Deactivating extension');
+
+    (<any><FileSystemWatcher>globals.TAG_CPPPROJ_WATCHER).dispose();
+
+    (<any><OutputChannel>globals.OBJ_OUTPUT).dispose();
+    globals.OBJ_OUTPUT = undefined;
+
+    globals.STATE = undefined;
 }
 
 exports.deactivate = deactivate;

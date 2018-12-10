@@ -1,4 +1,4 @@
-import { Memento, OutputChannel } from 'vscode';
+import { Memento, OutputChannel, FileSystemWatcher, Uri } from 'vscode';
 import { ChildProcess } from 'child_process';
 import { windows, linux, darwin } from './globals';
 var vscode = require('vscode');
@@ -28,13 +28,13 @@ var ext_map: Record<string, string[]> = {
 //     "CMakeFiles", ".git"
 // ];
 
-function log_output(results: string, prefix: string) {
+function log_output(results: string) {
     let outputChannel = globals.OBJ_OUTPUT;
 
     // We let IBM Output Colorizer handle coloring
     let output = ansi.unstyle(results as string).trim();
 
-    outputChannel.appendLine(prefix + '\t' + output);
+    outputChannel.appendLine(output);
 }
 
 function build_project(path: string, params: string[]) {
@@ -45,24 +45,40 @@ function build_project(path: string, params: string[]) {
 
     params = opt_map[build_tool].concat([path]).concat(params);
 
-    log_output([build_tool].concat(params).join(' '), '[command]');
+    log_output([build_tool].concat(params).join(' '));
 
     let child: ChildProcess = spawn(build_tool, params);
 
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
 
-    child.stdout.on('data', (data: string) => { log_output(data, '[build]\t'); });
-    child.stderr.on('data', (data: string) => { log_output(data, '[error]\t'); });
+    child.stdout.on('data', (data: string) => { log_output(data); });
+    child.stderr.on('data', (data: string) => { log_output(data); });
 
-    child.stdout.on('error', (err: Error) => { log_output(err.message, '[fatal]\t'); });
-    child.stderr.on('error', (err: Error) => { log_output(err.message, '[fatal]\t'); });
+    child.stdout.on('error', (err: Error) => { log_output(err.message); });
+    child.stderr.on('error', (err: Error) => { log_output(err.message); });
 
-    child.stdout.on('end', (data: string) => { log_output(data, '[end]\t'); });
-    child.stderr.on('end', (data: string) => { log_output(data, '[end]\t'); });
+    child.stdout.on('end', (data: string) => { log_output(data); });
+    child.stderr.on('end', (data: string) => { log_output(data); });
 
-    child.on('error', (err: Error) => { log_output(err.message, '[error]\t'); });
-    child.on('close', (code: number, signal: string) => { log_output(signal + ' ' + code, '[end]\t'); });
+    child.on('error', (err: Error) => { log_output(err.message); });
+    child.on('close', (code: number, signal: string) => { log_output(signal + ' ' + code); });
+}
+
+function is_proj(path: string) {
+    // for (let value of ignore) {
+    //     if (file.includes(value)) {
+    //         return;
+    //     }
+    // }
+
+    for (let value of build_ext) {
+        if (path.includes(value) &&
+            (path.length === (path.lastIndexOf(value) + value.length))) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function build_proj_list_recursive(startPath: string) {
@@ -73,18 +89,8 @@ function build_proj_list_recursive(startPath: string) {
     try {
         fs.readdirSync(startPath).forEach((file: string) => {
             file = path.join(startPath, file);
-
-            // for (let value of ignore) {
-            //     if (file.includes(value)) {
-            //         return;
-            //     }
-            // }
-
-            for (let value of build_ext) {
-                if (file.includes(value) &&
-                    (file.length === (file.lastIndexOf(value) + value.length))) {
-                    projList.push(file);
-                }
+            if (is_proj(file)) {
+                projList.push(file);
             }
 
             if (fs.statSync(file).isDirectory()) {
@@ -98,30 +104,19 @@ function build_proj_list_recursive(startPath: string) {
     return projList;
 }
 
-function build_proj_list(startPath: string, projList: string[]) {
-    console.log('Entry point for recursive directory listing');
-
-    if (projList.length !== 0) {
-        return projList;
-    }
-
-    startPath = path.join(startPath, path.sep);
-    projList = build_proj_list_recursive(startPath);
-
-    projList = projList.map(function (file: string) {
-        return file.replace(startPath, '');
-    });
-
-    return projList;
-}
-
 function load_proj_list(startPath: string) {
     return new Promise(
         (fulfill, reject) => {
             console.log('Building directory listing for VS projects');
 
             try {
-                let projList = build_proj_list(startPath, []);
+                let projList: string[];
+
+                projList = build_proj_list_recursive(startPath);
+
+                projList = projList.map(function (file: string) {
+                    return file.replace(startPath, '');
+                });
 
                 fulfill(projList);
             } catch (error) {
@@ -130,7 +125,40 @@ function load_proj_list(startPath: string) {
         });
 }
 
-var load = function (state: Memento) {
+function proj_order(left: string, right: string) {
+    var count = (str: string) => {
+        return (str.split(path.sep)).length;
+    };
+
+    return count(left) - count(right);
+}
+
+function fileCreated(e: Uri) {
+    let state: Memento = <any><Memento>globals.OBJ_STATE;
+    let projList: string[] = <any><string[]>state.get(globals.TAG_CPPPROJ);
+
+    if (is_proj(e.path)) {
+        let proj: string = e.path.replace(vscode.workspace.rootPath, '');
+        projList.concat([proj]);
+    }
+    projList.sort(proj_order);
+    state.update(globals.TAG_CPPPROJ, projList);
+}
+
+
+function fileDeleted(e: Uri) {
+    let state: Memento = <any><Memento>globals.OBJ_STATE;
+    let projList: string[] = <any><string[]>state.get(globals.TAG_CPPPROJ);
+
+    projList.forEach(proj => {
+        if (e.path.includes(proj)) {
+            projList.splice(projList.indexOf(proj), 1);
+        }
+    });
+    state.update(globals.TAG_CPPPROJ, projList);
+}
+
+function load(state: Memento) {
     console.log('Indexing the workspace folder');
 
     return new Promise(
@@ -142,15 +170,14 @@ var load = function (state: Memento) {
                     return load_proj_list(vscode.workspace.rootPath).then(
                         (value) => {
                             if (value !== undefined) {
-                                let projList = value as any[];
-                                projList.sort((left, right) => {
-                                    var count = (str: string) => {
-                                        return (str.split(path.sep)).length;
-                                    };
-
-                                    return count(left) - count(right);
-                                });
+                                let projList: string[] = <any><string[]>value;
+                                projList.sort(proj_order);
                                 state.update(globals.TAG_CPPPROJ, projList);
+
+                                let watcher: FileSystemWatcher = <any><FileSystemWatcher>globals.OBJ_CPPPROJ_WATCHER;
+                                watcher.onDidCreate(fileCreated);
+                                watcher.onDidDelete(fileDeleted);
+
                                 fulfill();
                             }
                             else {

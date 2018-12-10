@@ -13,7 +13,9 @@ exports.STR_MRULIST = 'Recently Opened: ';
 exports.STR_CPPPROJ = 'Project: ';
 exports.STR_CODECMDER = 'VSCodeCmder';
 // Shared objects
+exports.OBJ_STATE = undefined;
 exports.OBJ_OUTPUT = undefined;
+exports.OBJ_CPPPROJ_WATCHER = 'codecmder.cppproj_watcher';
 
 
 export function windows() {

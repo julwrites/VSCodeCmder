@@ -134,8 +134,8 @@ function proj_order(left: string, right: string) {
 }
 
 function fileCreated(e: Uri) {
-    let state: Memento = <any><Memento>globals.OBJ_STATE;
-    let projList: string[] = <any><string[]>state.get(globals.TAG_CPPPROJ);
+    let state: Memento = <Memento><any>globals.OBJ_STATE;
+    let projList: string[] = <string[]><any>state.get(globals.TAG_CPPPROJ);
 
     if (is_proj(e.path)) {
         let proj: string = e.path.replace(vscode.workspace.rootPath, '');
@@ -148,7 +148,7 @@ function fileCreated(e: Uri) {
 
 function fileDeleted(e: Uri) {
     let state: Memento = <any><Memento>globals.OBJ_STATE;
-    let projList: string[] = <any><string[]>state.get(globals.TAG_CPPPROJ);
+    let projList: string[] = <string[]><any>state.get(globals.TAG_CPPPROJ);
 
     projList.forEach(proj => {
         if (e.path.includes(proj)) {
@@ -165,16 +165,23 @@ function load(state: Memento) {
         (fulfill, reject) => {
             // If we don't have a workspace (no folder open) don't load anything
             if (vscode.workspace.rootPath !== undefined) {
+                let projList: string[] = <string[]><any>state.get(globals.TAG_CPPPROJ);
+
+                // If it is already loaded, pass the cached value
+                if (projList.length !== 0) {
+                    fulfill();
+                }
+
                 try {
                     console.log('Start building the project list');
                     return load_proj_list(vscode.workspace.rootPath).then(
                         (value) => {
                             if (value !== undefined) {
-                                let projList: string[] = <any><string[]>value;
+                                let projList: string[] = <string[]><any>value;
                                 projList.sort(proj_order);
                                 state.update(globals.TAG_CPPPROJ, projList);
 
-                                let watcher: FileSystemWatcher = <any><FileSystemWatcher>globals.OBJ_CPPPROJ_WATCHER;
+                                let watcher: FileSystemWatcher = <FileSystemWatcher><any>globals.OBJ_CPPPROJ_WATCHER;
                                 watcher.onDidCreate(fileCreated);
                                 watcher.onDidDelete(fileDeleted);
 
@@ -245,10 +252,10 @@ var trigger_build = function (state: Memento) {
     if (build_env()) {
 
         load(state).then(
-            () => {
+            (value) => {
                 let root: string = <string><any>state.get(globals.TAG_ROOTPATH);
                 let start: string = vscode.workspace.rootPath === undefined ? (root === undefined ? '' : root) : vscode.workspace.rootPath;
-                let projList: string[] = <string[]><any>state.get(globals.TAG_CPPPROJ);
+                let projList: string[] = <string[]><any>value;
 
                 if (projList !== undefined) {
                     if (projList.length === 0) {

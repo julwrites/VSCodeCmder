@@ -58,9 +58,9 @@ exports.activate = activate;
 function deactivate() {
     console.log('Deactivating extension');
 
-    (<any><FileSystemWatcher>globals.TAG_CPPPROJ_WATCHER).dispose();
+    (<FileSystemWatcher><any>globals.TAG_CPPPROJ_WATCHER).dispose();
 
-    (<any><OutputChannel>globals.OBJ_OUTPUT).dispose();
+    (<OutputChannel><any>globals.OBJ_OUTPUT).dispose();
     globals.OBJ_OUTPUT = undefined;
 
     globals.STATE = undefined;

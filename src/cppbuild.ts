@@ -1,4 +1,4 @@
-import { Memento, OutputChannel, FileSystemWatcher, Uri } from 'vscode';
+import { Memento, OutputChannel, Uri, FileSystemWatcher } from 'vscode';
 import { ChildProcess } from 'child_process';
 import { windows, linux, darwin } from './globals';
 var vscode = require('vscode');
@@ -6,11 +6,13 @@ var fs = require('fs');
 var path = require('path');
 var ansi = require('ansi-colors');
 var globals = require('./globals.js');
+var clone = require('clone');
 var commandExists = require('command-exists');
 var spawn = require('cross-spawn');
 
-var build_tool: string;
-var build_ext: string[];
+var build_tool: string = "";
+var build_ext: string[] = [];
+var proj_list: string[] = [];
 
 var opt_map: Record<string, string[]> = {
     'msbuild': [],
@@ -20,8 +22,8 @@ var opt_map: Record<string, string[]> = {
 
 var ext_map: Record<string, string[]> = {
     'msbuild': ['.sln', '.vcxproj'],
-    'make': ['Makefile'],
-    'xcode': ['.xcode', 'xcodeproj']
+    'make': ['.Makefile'],
+    'xcode': ['.xcode', '.xcodeproj']
 };
 
 // var ignore: string[] = [
@@ -104,21 +106,21 @@ function build_proj_list_recursive(startPath: string) {
     return projList;
 }
 
-function load_proj_list(startPath: string) {
+function load_proj_list() {
     return new Promise(
         (fulfill, reject) => {
             console.log('Building directory listing for VS projects');
 
             try {
-                let projList: string[];
+                proj_list = build_proj_list_recursive(vscode.workspace.rootPath);
 
-                projList = build_proj_list_recursive(startPath);
-
-                projList = projList.map(function (file: string) {
-                    return file.replace(startPath, '');
+                proj_list = proj_list.map(function (file: string) {
+                    return path.relative(vscode.workspace.rootPath, file);
                 });
 
-                fulfill(projList);
+                proj_list.sort(proj_order);
+
+                fulfill(clone(proj_list));
             } catch (error) {
                 reject();
             }
@@ -134,29 +136,29 @@ function proj_order(left: string, right: string) {
 }
 
 function fileCreated(e: Uri) {
-    let state: Memento = <Memento><any>globals.OBJ_STATE;
-    let projList: string[] = <string[]><any>state.get(globals.TAG_CPPPROJ);
+    let filePath = e.fsPath;
 
-    if (is_proj(e.path)) {
-        let proj: string = e.path.replace(vscode.workspace.rootPath, '');
-        projList.concat([proj]);
+    console.log(filePath + ' created');
+
+    let proj: string = path.relative(vscode.workspace.rootPath, filePath);
+
+    if (is_proj(proj)) {
+        proj_list.push(proj);
     }
-    projList.sort(proj_order);
-    state.update(globals.TAG_CPPPROJ, projList);
-}
 
+    proj_list.sort(proj_order);
+}
 
 function fileDeleted(e: Uri) {
-    let state: Memento = <any><Memento>globals.OBJ_STATE;
-    let projList: string[] = <string[]><any>state.get(globals.TAG_CPPPROJ);
+    let filePath = e.fsPath;
 
-    projList.forEach(proj => {
-        if (e.path.includes(proj)) {
-            projList.splice(projList.indexOf(proj), 1);
-        }
-    });
-    state.update(globals.TAG_CPPPROJ, projList);
+    console.log(filePath + ' deleted');
+
+    let proj: string = path.relative(vscode.workspace.rootPath, filePath);
+
+    proj_list.splice(proj_list.indexOf(proj), 1);
 }
+
 
 function load(state: Memento) {
     console.log('Indexing the workspace folder');
@@ -165,27 +167,27 @@ function load(state: Memento) {
         (fulfill, reject) => {
             // If we don't have a workspace (no folder open) don't load anything
             if (vscode.workspace.rootPath !== undefined) {
-                let projList: string[] = <string[]><any>state.get(globals.TAG_CPPPROJ);
-
                 // If it is already loaded, pass the cached value
-                if (projList.length !== 0) {
-                    fulfill();
+                if (proj_list.length !== 0) {
+                    fulfill(clone(proj_list));
+                    return;
                 }
 
                 try {
                     console.log('Start building the project list');
-                    return load_proj_list(vscode.workspace.rootPath).then(
+                    return load_proj_list().then(
                         (value) => {
                             if (value !== undefined) {
                                 let projList: string[] = <string[]><any>value;
-                                projList.sort(proj_order);
-                                state.update(globals.TAG_CPPPROJ, projList);
 
-                                let watcher: FileSystemWatcher = <FileSystemWatcher><any>globals.OBJ_CPPPROJ_WATCHER;
+                                let glob: string = '**/*.{' + build_ext.join(',').replace(/\./g, '') + '}';
+
+                                let watcher: FileSystemWatcher = vscode.workspace.createFileSystemWatcher(glob);
                                 watcher.onDidCreate(fileCreated);
                                 watcher.onDidDelete(fileDeleted);
+                                globals.OBJ_CPPPROJ_WATCHER = watcher;
 
-                                fulfill();
+                                fulfill(projList);
                             }
                             else {
                                 reject();

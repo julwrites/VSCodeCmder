@@ -1,21 +1,23 @@
+import { OutputChannel, FileSystemWatcher, Memento } from "vscode";
+
 // Global defines
-exports.TIMEOUT = 5000;
-exports.MRU_MAX = 5;
-exports.DEFAULT_DEPTH = 2;
+export let TIMEOUT: number = 5000;
+export let MRU_MAX: number = 5;
+export let DEFAULT_DEPTH: number = 2;
 // State tags
-exports.TAG_ROOTPATH = 'codecmder.rootPath';
-exports.TAG_MRULIST = 'codecmder.recent';
-exports.TAG_BOOKMARKS = 'codecmder.bookmarks';
-exports.TAG_CPPPROJ = 'codecmder.cppproj';
+export let TAG_ROOTPATH: string = 'codecmder.rootPath';
+export let TAG_MRULIST: string = 'codecmder.recent';
+export let TAG_BOOKMARKS: string = 'codecmder.bookmarks';
+export let TAG_CPPPROJ: string = 'codecmder.cppproj';
 // Strings
-exports.STR_BOOKMARK = 'Bookmark: ';
-exports.STR_MRULIST = 'Recently Opened: ';
-exports.STR_CPPPROJ = 'Project: ';
-exports.STR_CODECMDER = 'VSCodeCmder';
+export let STR_BOOKMARK: string = 'Bookmark: ';
+export let STR_MRULIST: string = 'Recently Opened: ';
+export let STR_CPPPROJ: string = 'Project: ';
+export let STR_CODECMDER: string = 'VSCodeCmder';
 // Shared objects
-exports.OBJ_STATE = undefined;
-exports.OBJ_OUTPUT = undefined;
-exports.OBJ_CPPPROJ_WATCHER = 'codecmder.cppproj_watcher';
+export let OBJ_STATE: Memento;
+export let OBJ_OUTPUT: OutputChannel;
+export let OBJ_CPPPROJ_WATCHER: FileSystemWatcher;
 
 
 export function windows() {

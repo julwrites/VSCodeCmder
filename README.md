@@ -29,15 +29,15 @@ Bookmark:
 -   Clear:
     -   Clears all bookmarks
 
-![bookmarks](/images/bookmarks.png)
+![bookmarks](/images/Bookmarks.png)
 
 Build C++ Project:
 
 - Build:
     - Searches the workspace for C++ project files and runs build
 
-![cppbuild_command](/images/cppbuild_command.png)
-![cppbuild_status](/images/cppbuild_statusbar.png)
+![cppbuild_command](/images/CppBuild_Command.png)
+![cppbuild_status](/images/CppBuild_StatusBar.png)
 
 By default, VSCodeCmder searches the system and user Path env, but this can be overwritten in settings
 

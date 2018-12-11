@@ -20,12 +20,6 @@ Jump to Path:
 
 ![Jump to Path](/images/Jump_to_Path.png)
 
-Set Root Path:
-
--   Sets the default root directory if workspace is not open
-
-![Set Root](/images/Set_Root.png)
-
 Bookmark:
 
 -   Add:
@@ -35,21 +29,34 @@ Bookmark:
 -   Clear:
     -   Clears all bookmarks
 
-![Bookmarks](/images/Bookmarks.png)
+![bookmarks](/images/bookmarks.png)
 
 Build C++ Project:
 
 - Build:
     - Searches the workspace for C++ project files and runs build
 
+![cppbuild_command](/images/cppbuild_command.png)
+![cppbuild_status](/images/cppbuild_statusbar.png)
+
 By default, VSCodeCmder searches the system and user Path env, but this can be overwritten in settings
 
 ```
-"codecmder.buildtool": {
+"codecmder.buildTools": {
     "msbuild": "C:\\Program Files (x86)\\Microsoft Visual Studio\\ ... \\MSBuild.exe", 
     "make" : "/bin/make"
     ... 
 }
+```
+
+Similarly, ignore patterns can be specified much like in .gitignore 
+
+```
+"codecmder.ignore": [
+    "CmakeFiles", 
+    "*.vcxproj.filters",
+    ...
+]
 ```
 
 ## Requirements
@@ -73,6 +80,7 @@ What's New?
 
 -   Added build functionality for Visual Studio projects and Makefiles
 -   Added caching and file watching functionality to speed up build calls
+-   Added ignore and de-duplication functionality to present cleaner output
 
 ## Contributing
 

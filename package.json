@@ -2,7 +2,7 @@
     "name": "codecmder",
     "displayName": "VSCodeCmder",
     "description": "Commands to make it easier to use VSCode in a keyboard-only workflow",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "publisher": "Julwrites",
     "engines": {
         "vscode": "^1.29.0"
@@ -21,7 +21,6 @@
         "*",
         "onCommand:codecmder.navigate",
         "onCommand:codecmder.jumpToPath",
-        "onCommand:codecmder.setRoot",
         "onCommand:codecmder.addBookmark",
         "onCommand:codecmder.removeBookmark",
         "onCommand:codecmder.clearBookmark",
@@ -37,10 +36,6 @@
             {
                 "command": "codecmder.jumpToPath",
                 "title": "Jump To Path"
-            },
-            {
-                "command": "codecmder.setRoot",
-                "title": "Set Root Path"
             },
             {
                 "command": "codecmder.addBookmark",
@@ -95,6 +90,7 @@
         "cross-spawn": "^6.0.5",
         "directory-tree": "^1.2.1",
         "fs": "^0.0.1-security",
+        "ignore": "^5.0.4",
         "url-parse": "^1.4.3"
     },
     "scripts": {

@@ -8,10 +8,12 @@ var global = require('./global.js');
 var clone = require('clone');
 var commandExists = require('command-exists');
 var spawn = require('cross-spawn');
+var ignore = require('ignore');
 
 var build_tool: string = "";
 var build_cmd: string = "";
 var build_ext: string[] = [];
+var ignore_rules: string[] = [];
 var proj_list: string[] = [];
 
 var msbuild: string = 'msbuild';
@@ -22,17 +24,13 @@ var opt_map: Record<string, string[]> = {
     msbuild: [],
     make: ['-f'],
     xcode: []
-}
+};
 
 var ext_map: Record<string, string[]> = {
     msbuild: ['.sln', '.vcxproj'],
     make: ['.Makefile'],
     xcode: ['.xcode', '.xcodeproj']
 };
-
-// var ignore: string[] = [
-//     "CMakeFiles", ".git"
-// ];
 
 function log_output(results: string) {
     let outputChannel = global.OBJ_OUTPUT;
@@ -66,18 +64,9 @@ function build_project(path: string, params: string[]) {
 
     child.stdout.on('end', (data: string) => { log_output(data); });
     child.stderr.on('end', (data: string) => { log_output(data); });
-
-    child.on('error', (err: Error) => { log_output(err.message); });
-    child.on('close', (code: number, signal: string) => { log_output(signal + ' ' + code); });
 }
 
 function is_proj(path: string) {
-    // for (let value of ignore) {
-    //     if (file.includes(value)) {
-    //         return;
-    //     }
-    // }
-
     for (let value of build_ext) {
         if (path.includes(value) &&
             (path.length === (path.lastIndexOf(value) + value.length))) {
@@ -85,6 +74,21 @@ function is_proj(path: string) {
         }
     }
     return false;
+}
+
+function validate_proj(projList: string[]) {
+    projList = ignore().add(ignore_rules).filter(projList);
+
+    projList.sort((left: string, right: string) => {
+        var count = (str: string) => {
+            return (str.split(path.sep)).length;
+        };
+
+        return count(left) - count(right);
+    }
+    );
+
+    return projList;
 }
 
 function build_proj_list_recursive(startPath: string) {
@@ -122,21 +126,13 @@ function load_proj_list() {
                     return path.relative(vscode.workspace.rootPath, file);
                 });
 
-                proj_list.sort(proj_order);
+                proj_list = validate_proj(proj_list);
 
                 fulfill(clone(proj_list));
             } catch (error) {
                 reject();
             }
         });
-}
-
-function proj_order(left: string, right: string) {
-    var count = (str: string) => {
-        return (str.split(path.sep)).length;
-    };
-
-    return count(left) - count(right);
 }
 
 function fileCreated(e: Uri) {
@@ -146,11 +142,11 @@ function fileCreated(e: Uri) {
 
     let proj: string = path.relative(vscode.workspace.rootPath, filePath);
 
-    if (is_proj(proj)) {
+    if (is_proj(proj) && !proj_list.includes(proj)) {
         proj_list.push(proj);
     }
 
-    proj_list.sort(proj_order);
+    proj_list = validate_proj(proj_list);
 }
 
 function fileDeleted(e: Uri) {
@@ -243,11 +239,23 @@ function try_cmd(valid_tools: string[]) {
     return false;
 }
 
-function build_env() {
-    if (try_cfg([msbuild, make, xcode]) || try_cmd([msbuild, make, xcode])) {
-        build_ext = ext_map[build_tool];
+function load_ignore_cfg() {
+    let config: WorkspaceConfiguration = vscode.workspace.getConfiguration(global.TAG_CODECMDER);
+
+    if (config.has(global.TAG_IGNORE)) {
+        return <string[]><any>config.get(global.TAG_IGNORE);
     }
-    else { return false; }
+
+    return [];
+}
+
+function load_env() {
+    if (!try_cfg([msbuild, make, xcode]) && !try_cmd([msbuild, make, xcode])) {
+        return false;
+    }
+
+    build_ext = ext_map[build_tool];
+    ignore_rules = load_ignore_cfg();
 
     return true;
 }
@@ -257,7 +265,7 @@ var trigger_build = function (state: Memento) {
 
     vscode.window.setStatusBarMessage('Scanning for build tools', global.TIMEOUT);
 
-    if (build_env()) {
+    if (load_env()) {
 
         load(state).then(
             (value) => {

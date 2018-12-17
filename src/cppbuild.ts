@@ -12,7 +12,7 @@ var ignore = require('ignore');
 
 var build_tool: string = "";
 var build_cmd: string = "";
-var build_ext: string[] = [];
+var build_ext: RegExp[] = [];
 var ignore_rules: string[] = [];
 var proj_list: string[] = [];
 
@@ -26,10 +26,10 @@ var opt_map: Record<string, string[]> = {
     xcode: []
 };
 
-var ext_map: Record<string, string[]> = {
-    msbuild: ['.sln', '.vcxproj'],
-    make: ['.Makefile'],
-    xcode: ['.xcode', '.xcodeproj']
+var ext_map: Record<string, RegExp[]> = {
+    msbuild: [/\.(sln|vcxproj)/],
+    make: [/\.(Makefile)/],
+    xcode: [/\.(build|xcodeproj)\W\.(sh)/]
 };
 
 function log_output(results: string) {
@@ -68,8 +68,7 @@ function build_project(path: string, params: string[]) {
 
 function is_proj(path: string) {
     for (let value of build_ext) {
-        if (path.includes(value) &&
-            (path.length === (path.lastIndexOf(value) + value.length))) {
+        if (null !== path.match(value)) {
             return true;
         }
     }
@@ -99,12 +98,11 @@ function build_proj_list_recursive(startPath: string) {
     try {
         fs.readdirSync(startPath).forEach((file: string) => {
             file = path.join(startPath, file);
-            if (is_proj(file)) {
-                projList.push(file);
-            }
-
             if (fs.statSync(file).isDirectory()) {
                 projList = projList.concat(build_proj_list_recursive(file));
+            }
+            else if (is_proj(file)) {
+                projList.push(file);
             }
         });
     } catch (error) {

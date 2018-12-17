@@ -63,6 +63,8 @@ Similarly, ignore patterns can be specified much like in .gitignore
 
 Recommended to also install [IBM.OutputColorizer](https://marketplace.visualstudio.com/items?itemName=IBM.output-colorizer)
 
+On MacOS, XCode Command Line Tools must be available to build XCode projects
+
 ## Extension Settings
 
 No extension settings

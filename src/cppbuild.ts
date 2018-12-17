@@ -26,7 +26,7 @@ var opt_map: Record<string, string[]> = {
     xcode: []
 };
 
-var ext_map: Record<string, RegExp[]> = {
+var rgx_map: Record<string, RegExp[]> = {
     msbuild: [/\.(sln|vcxproj)/],
     make: [/\.(Makefile)/],
     xcode: [/\.(build|xcodeproj)\W\.(sh)/]
@@ -252,7 +252,7 @@ function load_env() {
         return false;
     }
 
-    build_ext = ext_map[build_tool];
+    build_ext = rgx_map[build_tool];
     ignore_rules = load_ignore_cfg();
 
     return true;

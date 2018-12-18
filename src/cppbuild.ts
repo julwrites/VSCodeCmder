@@ -1,5 +1,6 @@
 import { Memento, OutputChannel, Uri, FileSystemWatcher, WorkspaceConfiguration } from 'vscode';
 import { ChildProcess } from 'child_process';
+import { darwin } from './global';
 var vscode = require('vscode');
 var fs = require('fs');
 var path = require('path');
@@ -18,18 +19,24 @@ var proj_list: string[] = [];
 
 var msbuild: string = 'msbuild';
 var make: string = 'make';
-var xcode: string = 'xcode';
+var xcode: string = 'xcodebuild';
 
 var opt_map: Record<string, string[]> = {
     msbuild: [],
     make: ['-f'],
-    xcode: []
+    xcodebuild: ['-scheme']
+};
+
+var suf_map: Record<string, string[]> = {
+    msbuild: [],
+    make: [],
+    xcodebuild: ['build']
 };
 
 var rgx_map: Record<string, RegExp[]> = {
     msbuild: [/\.(sln|vcxproj)/],
     make: [/\.(Makefile)/],
-    xcode: [/\.(build|xcodeproj)\W\.(sh)/]
+    xcodebuild: [/\.(xcworkspace)/]
 };
 
 function log_output(results: string) {
@@ -47,7 +54,7 @@ function build_project(path: string, params: string[]) {
     outputChannel.show();
     outputChannel.clear();
 
-    params = opt_map[build_tool].concat([path]).concat(params);
+    params = opt_map[build_tool].concat([path]).concat(suf_map[build_tool]).concat(params);
 
     log_output([build_cmd].concat(params).join(' '));
 
@@ -75,6 +82,43 @@ function is_proj(path: string) {
     return false;
 }
 
+function get_proj(path: string) {
+    let list: string[] = [];
+
+    if (darwin() && build_tool === xcode) {
+        let result: string[] = (<Buffer><any>spawn.sync(build_tool, ['-list', '-workspace', path]).stdout).toString().split('\n');
+
+        let start: number = -1;
+        for (let i = 0; i < result.length; i++) {
+            const line: string = result[i];
+            if (line !== undefined && line.includes('Schemes:')) {
+                start = i; break;
+            }
+        }
+
+        if (start !== -1) {
+            for (let i = start + 1; i < result.length; i++) {
+                const line: string = <string><any>result[i];
+                if (line.length !== 0) {
+                    list.push(line.trim());
+                }
+            }
+        }
+
+        return list;
+    }
+
+    return [path];
+}
+
+function itemize_proj(proj: string) {
+    if (darwin() && build_tool === xcode) {
+        return proj;
+    }
+
+    return path.relative(vscode.workspace.rootPath, proj);
+}
+
 function validate_proj(projList: string[]) {
     projList = ignore().add(ignore_rules).filter(projList);
 
@@ -98,11 +142,13 @@ function build_proj_list_recursive(startPath: string) {
     try {
         fs.readdirSync(startPath).forEach((file: string) => {
             file = path.join(startPath, file);
+
+            if (is_proj(file)) {
+                projList.concat(get_proj(file));
+            }
+
             if (fs.statSync(file).isDirectory()) {
                 projList = projList.concat(build_proj_list_recursive(file));
-            }
-            else if (is_proj(file)) {
-                projList.push(file);
             }
         });
     } catch (error) {
@@ -121,7 +167,7 @@ function load_proj_list() {
                 proj_list = build_proj_list_recursive(vscode.workspace.rootPath);
 
                 proj_list = proj_list.map(function (file: string) {
-                    return path.relative(vscode.workspace.rootPath, file);
+                    return itemize_proj(file);
                 });
 
                 proj_list = validate_proj(proj_list);
@@ -138,7 +184,7 @@ function fileCreated(e: Uri) {
 
     console.log(filePath + ' created');
 
-    let proj: string = path.relative(vscode.workspace.rootPath, filePath);
+    let proj: string = itemize_proj(filePath);
 
     if (is_proj(proj) && !proj_list.includes(proj)) {
         proj_list.push(proj);
@@ -152,7 +198,7 @@ function fileDeleted(e: Uri) {
 
     console.log(filePath + ' deleted');
 
-    let proj: string = path.relative(vscode.workspace.rootPath, filePath);
+    let proj: string = itemize_proj(filePath);
 
     proj_list.splice(proj_list.indexOf(proj), 1);
 }
@@ -248,7 +294,7 @@ function load_ignore_cfg() {
 }
 
 function load_env() {
-    if (!try_cfg([msbuild, make, xcode]) && !try_cmd([msbuild, make, xcode])) {
+    if (!try_cfg([msbuild, xcode, make]) && !try_cmd([msbuild, xcode, make])) {
         return false;
     }
 

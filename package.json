@@ -75,10 +75,15 @@
             "type": "object",
             "title": "VSCodeCmder configuration",
             "properties": {
-                "codecmder.buildToolPath": {
+                "codecmder.buildTools": {
                     "type": "object",
                     "default": "e.g. msbuild, make, xcode",
                     "description": "Path to the project build tool (e.g. msbuild, make, xcode)"
+                },
+                "codecmder.ignore": {
+                    "type": "array",
+                    "default": "e.g. CMakeFiles, .git",
+                    "description": "Folders to ignore when looking for C++ Projects"
                 }
             }
         }

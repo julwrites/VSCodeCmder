@@ -15,8 +15,19 @@ var build_tool: string = "";
 var build_cmd: string = "";
 var build_ext: RegExp[] = [];
 var ignore_rules: string[] = [];
-var proj_list: string[] = [];
-var proj_map: Record<string, string> = {}
+
+class Project {
+    path: string;
+    proj: string;
+    name: string;
+
+    constructor(path: string, proj: string, name: string) {
+        this.path = path;
+        this.proj = proj;
+        this.name = name;
+    }
+}
+var proj_map: Project[] = [];
 
 var msbuild: string = 'msbuild';
 var make: string = 'make';
@@ -35,9 +46,9 @@ var suf_map: Record<string, string[]> = {
 };
 
 var rgx_map: Record<string, RegExp[]> = {
-    msbuild: [/\.(sln|vcxproj)/],
-    make: [/\.(Makefile)/],
-    xcodebuild: [/\.(xcworkspace)/]
+    msbuild: [/\.(sln|vcxproj)$/],
+    make: [/\.(Makefile)$/],
+    xcodebuild: [/\.(xcworkspace)$/]
 };
 
 function log_output(results: string) {
@@ -49,17 +60,20 @@ function log_output(results: string) {
     outputChannel.appendLine(output);
 }
 
-function build_project(path: string, params: string[]) {
+function build_project(proj: Project, params: string[]) {
     let outputChannel: OutputChannel = global.OBJ_OUTPUT;
 
     outputChannel.show();
     outputChannel.clear();
 
-    params = opt_map[build_tool].concat([path]).concat(suf_map[build_tool]).concat(params);
+    params = opt_map[build_tool].concat([proj.proj]).concat(suf_map[build_tool]).concat(params);
+
+    let options: Object = {};
+    if (proj.path.length !== 0) { options = { cwd: proj.path }; }
 
     log_output([build_cmd].concat(params).join(' '));
 
-    let child: ChildProcess = spawn(build_cmd, params);
+    let child: ChildProcess = spawn(build_cmd, params, options);
 
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
@@ -72,6 +86,16 @@ function build_project(path: string, params: string[]) {
 
     child.stdout.on('end', (data: string) => { log_output(data); });
     child.stderr.on('end', (data: string) => { log_output(data); });
+}
+
+function find_build_project(name: string, params: string[]) {
+    for (let item of proj_map) {
+        if (item.name.includes(name)) {
+            build_project(item, params);
+
+            return;
+        }
+    }
 }
 
 function is_proj(path: string) {
@@ -112,15 +136,34 @@ function get_proj(path: string) {
     return [path];
 }
 
-function itemize_proj(proj: string) {
+// Assume uri is full path and proj is the name of the project to be run
+// Generates a Project object
+function itemize_proj(uri: string, proj: string) {
     if (darwin() && build_tool === xcode) {
-        return proj;
+        return new Project(
+            path.dirname(uri),
+            proj,
+            path.join(path.dirname(path.relative(vscode.workspace.rootPath, uri)), proj));
     }
 
-    return path.relative(vscode.workspace.rootPath, proj);
+    return new Project(
+        '',
+        uri,
+        path.relative(vscode.workspace.rootPath, uri));
 }
 
-function validate_proj(projList: string[]) {
+function proj_names(projMap: Project[]) {
+    let projList: string[] = [];
+    for (let proj of projMap) {
+        projList.push(proj.name);
+    }
+
+    return projList;
+}
+
+function filter_proj(projMap: Project[]) {
+    let projList: string[] = proj_names(projMap);
+
     projList = ignore().add(ignore_rules).filter(projList);
 
     projList.sort((left: string, right: string) => {
@@ -132,24 +175,34 @@ function validate_proj(projList: string[]) {
     }
     );
 
-    return projList;
+    let outMap: Project[] = [];
+
+    for (let proj of projMap) {
+        if (projList.includes(proj.name)) {
+            outMap.push(proj);
+        }
+    }
+
+    return outMap;
 }
 
-function build_proj_list_recursive(startPath: string) {
+function build_proj_map_recursive(startPath: string) {
     console.log('Checking files from ' + startPath);
 
-    let projList: string[] = [];
+    let projList: Project[] = [];
 
     try {
         fs.readdirSync(startPath).forEach((file: string) => {
             file = path.join(startPath, file);
 
             if (is_proj(file)) {
-                projList = projList.concat(get_proj(file));
+                for (let proj of get_proj(file)) {
+                    projList.push(itemize_proj(file, proj));
+                }
             }
 
             if (fs.statSync(file).isDirectory()) {
-                projList = projList.concat(build_proj_list_recursive(file));
+                projList = projList.concat(build_proj_map_recursive(file));
             }
         });
     } catch (error) {
@@ -159,21 +212,17 @@ function build_proj_list_recursive(startPath: string) {
     return projList;
 }
 
-function load_proj_list() {
+function load_proj_map() {
     return new Promise(
         (fulfill, reject) => {
             console.log('Building directory listing for VS projects');
 
             try {
-                proj_list = build_proj_list_recursive(vscode.workspace.rootPath);
+                proj_map = build_proj_map_recursive(vscode.workspace.rootPath);
 
-                proj_list = proj_list.map(function (file: string) {
-                    return itemize_proj(file);
-                });
+                proj_map = filter_proj(proj_map);
 
-                proj_list = validate_proj(proj_list);
-
-                fulfill(clone(proj_list));
+                fulfill(proj_names(proj_map));
             } catch (error) {
                 reject();
             }
@@ -185,13 +234,17 @@ function fileCreated(e: Uri) {
 
     console.log(filePath + ' created');
 
-    let proj: string = itemize_proj(filePath);
+    if (is_proj(filePath)) {
+        for (let proj of get_proj(filePath)) {
+            let item: Project = itemize_proj(filePath, proj);
 
-    if (is_proj(proj) && !proj_list.includes(proj)) {
-        proj_list.push(proj);
+            if (!proj_map.includes(item)) {
+                proj_map.push(item);
+            }
+        }
     }
 
-    proj_list = validate_proj(proj_list);
+    proj_map = filter_proj(proj_map);
 }
 
 function fileDeleted(e: Uri) {
@@ -199,9 +252,11 @@ function fileDeleted(e: Uri) {
 
     console.log(filePath + ' deleted');
 
-    let proj: string = itemize_proj(filePath);
+    for (let proj of get_proj(filePath)) {
+        let item: Project = itemize_proj(filePath, proj);
 
-    proj_list.splice(proj_list.indexOf(proj), 1);
+        proj_map.splice(proj_map.indexOf(item), 1);
+    }
 }
 
 
@@ -213,14 +268,14 @@ function load(state: Memento) {
             // If we don't have a workspace (no folder open) don't load anything
             if (vscode.workspace.rootPath !== undefined) {
                 // If it is already loaded, pass the cached value
-                if (proj_list.length !== 0) {
-                    fulfill(clone(proj_list));
+                if (proj_map.length !== 0) {
+                    fulfill(proj_names(proj_map));
                     return;
                 }
 
                 try {
                     console.log('Start building the project list');
-                    return load_proj_list().then(
+                    return load_proj_map().then(
                         (value) => {
                             if (value !== undefined) {
                                 let projList: string[] = <string[]><any>value;
@@ -329,7 +384,7 @@ var trigger_build = function (state: Memento) {
                                     return;
                                 }
 
-                                build_project(path.join(vscode.workspace.rootPath, val), []);
+                                find_build_project(val, []);
                             });
                 }
             }

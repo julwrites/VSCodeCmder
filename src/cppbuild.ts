@@ -16,6 +16,7 @@ var build_cmd: string = "";
 var build_ext: RegExp[] = [];
 var ignore_rules: string[] = [];
 var proj_list: string[] = [];
+var proj_map: Record<string, string> = {}
 
 var msbuild: string = 'msbuild';
 var make: string = 'make';
@@ -144,7 +145,7 @@ function build_proj_list_recursive(startPath: string) {
             file = path.join(startPath, file);
 
             if (is_proj(file)) {
-                projList.concat(get_proj(file));
+                projList = projList.concat(get_proj(file));
             }
 
             if (fs.statSync(file).isDirectory()) {

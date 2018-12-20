@@ -6,7 +6,6 @@ var fs = require('fs');
 var path = require('path');
 var ansi = require('ansi-colors');
 var global = require('./global.js');
-var clone = require('clone');
 var commandExists = require('command-exists');
 var spawn = require('cross-spawn');
 var ignore = require('ignore');

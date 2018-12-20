@@ -48,7 +48,7 @@ var suf_map: Record<string, string[]> = {
 var rgx_map: Record<string, RegExp[]> = {
     msbuild: [/\.(sln|vcxproj)$/],
     make: [/\.(Makefile)$/],
-    xcodebuild: [/\.(xcworkspace)$/]
+    xcodebuild: [/\.(xcodeproj)$/]
 };
 
 function log_output(results: string) {
@@ -111,7 +111,7 @@ function get_proj(path: string) {
     let list: string[] = [];
 
     if (darwin() && build_tool === xcode) {
-        let result: string[] = (<Buffer><any>spawn.sync(build_tool, ['-list', '-workspace', path]).stdout).toString().split('\n');
+        let result: string[] = (<Buffer><any>spawn.sync(build_tool, ['-list', '-project', path]).stdout).toString().split('\n');
 
         let start: number = -1;
         for (let i = 0; i < result.length; i++) {

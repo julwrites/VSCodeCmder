@@ -6,7 +6,6 @@ var fs = require('fs');
 var path = require('path');
 var ansi = require('ansi-colors');
 var global = require('./global.js');
-var commandExists = require('command-exists');
 var spawn = require('cross-spawn');
 var ignore = require('ignore');
 
@@ -326,7 +325,7 @@ function try_cfg(valid_tools: string[]) {
 
 function try_cmd(valid_tools: string[]) {
     for (let value of valid_tools) {
-        if (commandExists.sync(value)) {
+        if (undefined !== spawn.sync(value).error) {
             build_tool = value;
             build_cmd = value;
 

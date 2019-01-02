@@ -1,35 +1,53 @@
 import { Memento, OutputChannel, Uri, FileSystemWatcher, WorkspaceConfiguration } from 'vscode';
 import { ChildProcess } from 'child_process';
+import { darwin } from './global';
 var vscode = require('vscode');
 var fs = require('fs');
 var path = require('path');
 var ansi = require('ansi-colors');
 var global = require('./global.js');
-var clone = require('clone');
 var commandExists = require('command-exists');
 var spawn = require('cross-spawn');
 var ignore = require('ignore');
 
 var build_tool: string = "";
 var build_cmd: string = "";
-var build_ext: string[] = [];
+var build_ext: RegExp[] = [];
 var ignore_rules: string[] = [];
-var proj_list: string[] = [];
+
+class Project {
+    path: string;
+    proj: string;
+    name: string;
+
+    constructor(path: string, proj: string, name: string) {
+        this.path = path;
+        this.proj = proj;
+        this.name = name;
+    }
+}
+var proj_map: Project[] = [];
 
 var msbuild: string = 'msbuild';
 var make: string = 'make';
-var xcode: string = 'xcode';
+var xcode: string = 'xcodebuild';
 
 var opt_map: Record<string, string[]> = {
     msbuild: [],
     make: ['-f'],
-    xcode: []
+    xcodebuild: ['-scheme']
 };
 
-var ext_map: Record<string, string[]> = {
-    msbuild: ['.sln', '.vcxproj'],
-    make: ['.Makefile'],
-    xcode: ['.xcode', '.xcodeproj']
+var suf_map: Record<string, string[]> = {
+    msbuild: [],
+    make: [],
+    xcodebuild: ['build']
+};
+
+var rgx_map: Record<string, RegExp[]> = {
+    msbuild: [/\.(sln|vcxproj)$/],
+    make: [/\.(Makefile)$/],
+    xcodebuild: [/\.(xcodeproj)$/]
 };
 
 function log_output(results: string) {
@@ -41,17 +59,20 @@ function log_output(results: string) {
     outputChannel.appendLine(output);
 }
 
-function build_project(path: string, params: string[]) {
+function build_project(proj: Project, params: string[]) {
     let outputChannel: OutputChannel = global.OBJ_OUTPUT;
 
     outputChannel.show();
     outputChannel.clear();
 
-    params = opt_map[build_tool].concat([path]).concat(params);
+    params = opt_map[build_tool].concat([proj.proj]).concat(suf_map[build_tool]).concat(params);
+
+    let options: Object = {};
+    if (proj.path.length !== 0) { options = { cwd: proj.path }; }
 
     log_output([build_cmd].concat(params).join(' '));
 
-    let child: ChildProcess = spawn(build_cmd, params);
+    let child: ChildProcess = spawn(build_cmd, params, options);
 
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
@@ -66,17 +87,82 @@ function build_project(path: string, params: string[]) {
     child.stderr.on('end', (data: string) => { log_output(data); });
 }
 
+function find_build_project(name: string, params: string[]) {
+    for (let item of proj_map) {
+        if (item.name.includes(name)) {
+            build_project(item, params);
+
+            return;
+        }
+    }
+}
+
 function is_proj(path: string) {
     for (let value of build_ext) {
-        if (path.includes(value) &&
-            (path.length === (path.lastIndexOf(value) + value.length))) {
+        if (null !== path.match(value)) {
             return true;
         }
     }
     return false;
 }
 
-function validate_proj(projList: string[]) {
+function get_proj(path: string) {
+    let list: string[] = [];
+
+    if (darwin() && build_tool === xcode) {
+        let result: string[] = (<Buffer><any>spawn.sync(build_tool, ['-list', '-project', path]).stdout).toString().split('\n');
+
+        let start: number = -1;
+        for (let i = 0; i < result.length; i++) {
+            const line: string = result[i];
+            if (line !== undefined && line.includes('Schemes:')) {
+                start = i; break;
+            }
+        }
+
+        if (start !== -1) {
+            for (let i = start + 1; i < result.length; i++) {
+                const line: string = <string><any>result[i];
+                if (line.length !== 0) {
+                    list.push(line.trim());
+                }
+            }
+        }
+
+        return list;
+    }
+
+    return [path];
+}
+
+// Assume uri is full path and proj is the name of the project to be run
+// Generates a Project object
+function itemize_proj(uri: string, proj: string) {
+    if (darwin() && build_tool === xcode) {
+        return new Project(
+            path.dirname(uri),
+            proj,
+            path.join(path.dirname(path.relative(vscode.workspace.rootPath, uri)), proj));
+    }
+
+    return new Project(
+        '',
+        uri,
+        path.relative(vscode.workspace.rootPath, uri));
+}
+
+function proj_names(projMap: Project[]) {
+    let projList: string[] = [];
+    for (let proj of projMap) {
+        projList.push(proj.name);
+    }
+
+    return projList;
+}
+
+function filter_proj(projMap: Project[]) {
+    let projList: string[] = proj_names(projMap);
+
     projList = ignore().add(ignore_rules).filter(projList);
 
     projList.sort((left: string, right: string) => {
@@ -88,23 +174,34 @@ function validate_proj(projList: string[]) {
     }
     );
 
-    return projList;
+    let outMap: Project[] = [];
+
+    for (let proj of projMap) {
+        if (projList.includes(proj.name)) {
+            outMap.push(proj);
+        }
+    }
+
+    return outMap;
 }
 
-function build_proj_list_recursive(startPath: string) {
+function build_proj_map_recursive(startPath: string) {
     console.log('Checking files from ' + startPath);
 
-    let projList: string[] = [];
+    let projList: Project[] = [];
 
     try {
         fs.readdirSync(startPath).forEach((file: string) => {
             file = path.join(startPath, file);
+
             if (is_proj(file)) {
-                projList.push(file);
+                for (let proj of get_proj(file)) {
+                    projList.push(itemize_proj(file, proj));
+                }
             }
 
             if (fs.statSync(file).isDirectory()) {
-                projList = projList.concat(build_proj_list_recursive(file));
+                projList = projList.concat(build_proj_map_recursive(file));
             }
         });
     } catch (error) {
@@ -114,21 +211,17 @@ function build_proj_list_recursive(startPath: string) {
     return projList;
 }
 
-function load_proj_list() {
+function load_proj_map() {
     return new Promise(
         (fulfill, reject) => {
             console.log('Building directory listing for VS projects');
 
             try {
-                proj_list = build_proj_list_recursive(vscode.workspace.rootPath);
+                proj_map = build_proj_map_recursive(vscode.workspace.rootPath);
 
-                proj_list = proj_list.map(function (file: string) {
-                    return path.relative(vscode.workspace.rootPath, file);
-                });
+                proj_map = filter_proj(proj_map);
 
-                proj_list = validate_proj(proj_list);
-
-                fulfill(clone(proj_list));
+                fulfill(proj_names(proj_map));
             } catch (error) {
                 reject();
             }
@@ -140,13 +233,17 @@ function fileCreated(e: Uri) {
 
     console.log(filePath + ' created');
 
-    let proj: string = path.relative(vscode.workspace.rootPath, filePath);
+    if (is_proj(filePath)) {
+        for (let proj of get_proj(filePath)) {
+            let item: Project = itemize_proj(filePath, proj);
 
-    if (is_proj(proj) && !proj_list.includes(proj)) {
-        proj_list.push(proj);
+            if (!proj_map.includes(item)) {
+                proj_map.push(item);
+            }
+        }
     }
 
-    proj_list = validate_proj(proj_list);
+    proj_map = filter_proj(proj_map);
 }
 
 function fileDeleted(e: Uri) {
@@ -154,9 +251,11 @@ function fileDeleted(e: Uri) {
 
     console.log(filePath + ' deleted');
 
-    let proj: string = path.relative(vscode.workspace.rootPath, filePath);
+    for (let proj of get_proj(filePath)) {
+        let item: Project = itemize_proj(filePath, proj);
 
-    proj_list.splice(proj_list.indexOf(proj), 1);
+        proj_map.splice(proj_map.indexOf(item), 1);
+    }
 }
 
 
@@ -168,14 +267,14 @@ function load(state: Memento) {
             // If we don't have a workspace (no folder open) don't load anything
             if (vscode.workspace.rootPath !== undefined) {
                 // If it is already loaded, pass the cached value
-                if (proj_list.length !== 0) {
-                    fulfill(clone(proj_list));
+                if (proj_map.length !== 0) {
+                    fulfill(proj_names(proj_map));
                     return;
                 }
 
                 try {
                     console.log('Start building the project list');
-                    return load_proj_list().then(
+                    return load_proj_map().then(
                         (value) => {
                             if (value !== undefined) {
                                 let projList: string[] = <string[]><any>value;
@@ -250,11 +349,11 @@ function load_ignore_cfg() {
 }
 
 function load_env() {
-    if (!try_cfg([msbuild, make, xcode]) && !try_cmd([msbuild, make, xcode])) {
+    if (!try_cfg([msbuild, xcode, make]) && !try_cmd([msbuild, xcode, make])) {
         return false;
     }
 
-    build_ext = ext_map[build_tool];
+    build_ext = rgx_map[build_tool];
     ignore_rules = load_ignore_cfg();
 
     return true;
@@ -284,7 +383,7 @@ var trigger_build = function (state: Memento) {
                                     return;
                                 }
 
-                                build_project(path.join(vscode.workspace.rootPath, val), []);
+                                find_build_project(val, []);
                             });
                 }
             }

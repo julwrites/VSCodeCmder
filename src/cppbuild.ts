@@ -45,7 +45,7 @@ var suf_map: Record<string, string[]> = {
 
 var rgx_map: Record<string, RegExp[]> = {
     msbuild: [/\.(sln|vcxproj)$/],
-    make: [/\.(Makefile)$/],
+    make: [/(Makefile)$/],
     xcodebuild: [/\.(xcodeproj)$/]
 };
 
@@ -325,7 +325,7 @@ function try_cfg(valid_tools: string[]) {
 
 function try_cmd(valid_tools: string[]) {
     for (let value of valid_tools) {
-        if (undefined !== spawn.sync(value).error) {
+        if (null === spawn.sync(value).error) {
             build_tool = value;
             build_cmd = value;
 

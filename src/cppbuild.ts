@@ -45,7 +45,7 @@ var suf_map: Record<string, string[]> = {
 
 var rgx_map: Record<string, RegExp[]> = {
     msbuild: [/\.(sln|vcxproj)$/],
-    make: [/(Makefile)$/],
+    make: [/\/(Makefile)$/, /^(Makefile)$/],
     xcodebuild: [/\.(xcodeproj)$/]
 };
 

@@ -52,6 +52,10 @@
             {
                 "command": "codecmder.buildproj",
                 "title": "Build a C++ Project"
+            },
+            {
+                "command": "codecmder.runCmd",
+                "title": "Run a command as if through CLI"
             }
         ],
         "keybindings": [
@@ -84,6 +88,11 @@
                     "type": "array",
                     "default": "e.g. CMakeFiles, .git",
                     "description": "Folders to ignore when looking for C++ Projects"
+                },
+                "codecmder.commands": {
+                    "type": "object",
+                    "default": "e.g. {\"cmake\": \"<cmake location>\"}",
+                    "description": "Mapping of the commands to their executable locations"
                 }
             }
         }

@@ -12,6 +12,7 @@ export let TAG_CPPPROJ: string = 'codecmder.cppproj';
 export let TAG_BUILDTOOL: string = 'codecmder.buildTools';
 export let TAG_IGNORE: string = 'ignore';
 export let TAG_SETTINGS: string = 'settings';
+export let TAG_COMMANDS: string = 'commands';
 // Strings
 export let STR_BOOKMARK: string = 'Bookmark: ';
 export let STR_MRULIST: string = 'Recently Opened: ';

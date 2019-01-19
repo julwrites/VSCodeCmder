@@ -55,7 +55,7 @@
             },
             {
                 "command": "codecmder.runCmd",
-                "title": "Run a command as if through CLI"
+                "title": "Run a command"
             }
         ],
         "keybindings": [
@@ -91,7 +91,7 @@
                 },
                 "codecmder.commands": {
                     "type": "object",
-                    "default": "e.g. {\"cmake\": \"<cmake location>\"}",
+                    "default": {},
                     "description": "Mapping of the commands to their executable locations"
                 }
             }

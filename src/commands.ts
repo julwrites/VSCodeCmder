@@ -1,6 +1,5 @@
 import { Memento, OutputChannel, Uri, FileSystemWatcher, WorkspaceConfiguration } from 'vscode';
 import { ChildProcess } from 'child_process';
-import { darwin } from './global';
 var vscode = require('vscode');
 var fs = require('fs');
 var path = require('path');
@@ -66,27 +65,22 @@ function find_run_cmd(name: string) {
 }
 
 function load_cfg() {
-    let config: WorkspaceConfiguration = vscode.workspace.getConfiguration(global.TAG_CODECMDER);
+    let config: WorkspaceConfiguration = vscode.workspace.getConfiguration(global.TAG_CODECMDER + "." + global.TAG_COMMANDS);
 
     cmd_map = [];
 
-    if (config.has(global.TAG_COMMANDS)) {
+    for (let key in config) {
+        let value: string = <string><any>config.get(key);
 
-        let cmdList: string = <string><any>config.get(global.TAG_COMMANDS);
-
-        for (let value of cmdList) {
-            let cmdPath: string = <string><any>config.get(value);
-
-            let stat = fs.statSync(cmdPath);
-            if (stat.isFile()) {
+        try {
+            let stat = fs.statSync(value);
+            if (stat.isFile() || null === spawn.sync(value).error) {
                 // Add to path, set command name to key
+                cmd_map.push(new Command(key, value, key));
             }
-
-            if (null === spawn.sync(value).error) {
-                // Set command as path as well as name
-            }
+        } catch (error) {
+            console.log("Could not parse " + value);
         }
-
     }
 
     if (cmd_map.length === 0) {

@@ -88,10 +88,15 @@ function load_cfg() {
         let value: string = <string><any>config.get(key);
 
         if (value !== undefined) {
-            let stat = fs.statSync(value);
-            if (stat.isFile() || null === spawn.sync(value).error) {
+            if (null === spawn.sync(value).error) {
                 // Add to path, set command name to key
-                cmd_map.push(new Command(key, value, key));
+                cmd_map.push(new Command(value, value, key));
+            } else {
+                let stat = fs.statSync(value);
+                if (stat.isFile()) {
+                    // Add to path, set command name to key
+                    cmd_map.push(new Command(value, key, key));
+                }
             }
         }
     }

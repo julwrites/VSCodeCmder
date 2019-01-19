@@ -27,15 +27,17 @@ function log_output(results: string) {
     outputChannel.appendLine(output);
 }
 
-function run_cmd(cmd: Command, params: string[]) {
+function run_cmd(cmd: Command, cwd: string, args: string[]) {
     let outputChannel: OutputChannel = global.OBJ_OUTPUT;
 
     outputChannel.show();
     outputChannel.clear();
 
-    log_output([cmd.path].concat(params).join(' '));
+    log_output([cmd.path].concat(args).join(' '));
 
-    let child: ChildProcess = spawn(cmd.path, params);
+    cwd = path.join(vscode.workspace.rootPath, cwd);
+
+    let child: ChildProcess = spawn(cmd.path, args, { cwd: cwd });
 
     child.stdout.setEncoding('utf8');
     child.stderr.setEncoding('utf8');
@@ -53,11 +55,24 @@ function run_cmd(cmd: Command, params: string[]) {
 function find_run_cmd(name: string) {
     for (let item of cmd_map) {
         if (item.name.includes(name)) {
-            let params: string[] = [];
+            vscode.window.showInputBox({ prompt: 'Enter directory to run from' }).then(
+                (cwd: string) => {
+                    if (cwd === undefined) {
+                        return;
+                    }
 
-            // TODO: Have some mechanisms to read in params
+                    vscode.window.showInputBox({ prompt: 'Enter parameters' }).then(
+                        (val: string) => {
+                            if (val !== undefined) {
+                                let args: string[] = [];
+                                args = args.concat(val.split(" "));
 
-            run_cmd(item, params);
+                                run_cmd(item, cwd, args);
+                            }
+                        }
+                    );
+                }
+            );
 
             return;
         }
@@ -72,14 +87,12 @@ function load_cfg() {
     for (let key in config) {
         let value: string = <string><any>config.get(key);
 
-        try {
+        if (value !== undefined) {
             let stat = fs.statSync(value);
             if (stat.isFile() || null === spawn.sync(value).error) {
                 // Add to path, set command name to key
                 cmd_map.push(new Command(key, value, key));
             }
-        } catch (error) {
-            console.log("Could not parse " + value);
         }
     }
 

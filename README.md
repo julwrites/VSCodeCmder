@@ -59,6 +59,20 @@ Similarly, ignore patterns can be specified much like in .gitignore
 ]
 ```
 
+Run Command:
+
+- Run Command:
+    - Runs a command from a list of commands, giving options for cwd and parameters
+
+![cppbuild_command](/images/Command.png)
+
+Commands can be specified in settings
+
+"codecmder.commands": {
+    "list": "dir",
+    ...
+}
+
 ## Requirements
 
 Recommended to also install [IBM.OutputColorizer](https://marketplace.visualstudio.com/items?itemName=IBM.output-colorizer)

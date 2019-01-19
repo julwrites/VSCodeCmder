@@ -2,7 +2,7 @@
     "name": "codecmder",
     "displayName": "VSCodeCmder",
     "description": "Commands to make it easier to use VSCode in a keyboard-only workflow",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "publisher": "Julwrites",
     "engines": {
         "vscode": "^1.29.0"

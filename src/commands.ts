@@ -1,4 +1,4 @@
-import { Memento, OutputChannel, Uri, FileSystemWatcher, WorkspaceConfiguration } from 'vscode';
+import { Memento, OutputChannel, Uri, FileSystemWatcher, WorkspaceConfiguration, ConfigurationChangeEvent } from 'vscode';
 import { ChildProcess } from 'child_process';
 var vscode = require('vscode');
 var fs = require('fs');
@@ -87,7 +87,7 @@ function load_cfg() {
     for (let key in config) {
         let value: string = <string><any>config.get(key);
 
-        if (value !== undefined) {
+        try {
             if (null === spawn.sync(value).error) {
                 // Add to path, set command name to key
                 cmd_map.push(new Command(value, value, key));
@@ -98,6 +98,8 @@ function load_cfg() {
                     cmd_map.push(new Command(value, key, key));
                 }
             }
+        } catch (error) {
+            console.log(error);
         }
     }
 

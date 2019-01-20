@@ -1,4 +1,4 @@
-import { Memento, OutputChannel, Uri, FileSystemWatcher, WorkspaceConfiguration, ConfigurationChangeEvent } from 'vscode';
+import { Memento, OutputChannel, WorkspaceConfiguration } from 'vscode';
 import { ChildProcess } from 'child_process';
 var vscode = require('vscode');
 var fs = require('fs');

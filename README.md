@@ -38,6 +38,7 @@ Build C++ Project:
 
 ![cppbuild_command](/images/CppBuild_Command.png)
 ![cppbuild_status](/images/CppBuild_StatusBar.png)
+![cppbuild_output](/images/CppBuild_Output.png)
 
 By default, VSCodeCmder searches the system and user Path env, but this can be overwritten in settings
 
@@ -57,6 +58,23 @@ Similarly, ignore patterns can be specified much like in .gitignore
     "*.vcxproj.filters",
     ...
 ]
+```
+
+Run Command:
+
+- Run Command:
+    - Runs a command from a list of commands, giving options for cwd and parameters
+
+Similar to C++ Build, the output from the command is listed in VSCodeCmder output channel
+![command_output](/images/Command_Output.png)
+
+Commands can be specified in settings
+
+```
+"codecmder.commands": {
+    "list": "dir",
+    ...
+}
 ```
 
 ## Requirements

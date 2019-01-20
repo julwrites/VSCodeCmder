@@ -7,6 +7,7 @@ var directory = require('./directory.js');
 var bookmarks = require('./bookmarks.js');
 var global = require('./global.js');
 var cppbuild = require('./cppbuild.js');
+var commands = require('./commands.js');
 
 function initialize(state: Memento) {
     global.STATE = state;
@@ -36,6 +37,8 @@ function activate(context: ExtensionContext) {
         () => { bookmarks.clr_bookmarks(state); });
     var bldCommand = vscode.commands.registerCommand('codecmder.buildproj',
         () => { cppbuild.build(state); });
+    var runCommand = vscode.commands.registerCommand('codecmder.runCmd',
+        () => { commands.run_cmd(state); });
 
     // Add to a list of disposables that die when the extension deactivates
     context.subscriptions.push(navCommand);
@@ -44,6 +47,7 @@ function activate(context: ExtensionContext) {
     context.subscriptions.push(delCommand);
     context.subscriptions.push(clrCommand);
     context.subscriptions.push(bldCommand);
+    context.subscriptions.push(runCommand);
 
     initialize(state);
 }

@@ -304,7 +304,7 @@ function load(state: Memento) {
 }
 
 function try_cfg(valid_tools: string[]) {
-    let config: WorkspaceConfiguration = vscode.workspace.getConfiguration(global.TAG_BUILDTOOL);
+    let config: WorkspaceConfiguration = vscode.workspace.getConfiguration(global.TAG_CODECMDER + "." + global.TAG_BUILDTOOL);
 
     for (let value of valid_tools) {
         if (config.has(value)) {

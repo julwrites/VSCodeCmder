@@ -310,12 +310,16 @@ function try_cfg(valid_tools: string[]) {
         if (config.has(value)) {
             let cmdPath: string = <string><any>config.get(value);
 
-            let stat = fs.statSync(cmdPath);
-            if (stat.isFile()) {
-                build_tool = value;
-                build_cmd = cmdPath;
+            try {
+                let stat = fs.statSync(cmdPath);
+                if (stat.isFile()) {
+                    build_tool = value;
+                    build_cmd = cmdPath;
 
-                return true;
+                    return true;
+                }
+            } catch (error) {
+                console.log(error);
             }
         }
     }

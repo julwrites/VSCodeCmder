@@ -5,7 +5,7 @@
     "version": "0.0.6",
     "publisher": "Julwrites",
     "engines": {
-        "vscode": "^1.29.0"
+        "vscode": "^1.20.0"
     },
     "icon": "images/folderIcon.jpg",
     "license": "https://github.com/julwrites/VSCodeCmder/blob/master/LICENSE",

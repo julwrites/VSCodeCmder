@@ -4,3 +4,12 @@ language: node_js
 branches:
   only:
     - master
+
+jobs:
+  include:
+    - stage: install
+      script: npm install
+    - stage: build
+      script: npm run compile
+    - stage: test
+      script: npm run test

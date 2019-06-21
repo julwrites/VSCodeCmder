@@ -12,8 +12,6 @@
 // import * as codecmder from '../extension';
 
 // Defines a Mocha test suite to group tests of similar kind together
-suite('Navigation', function () {
-
-    test("Valid Workspace", function () {
-    });
+suite('Navigation', function() {
+  test('Valid Workspace', function() {});
 });

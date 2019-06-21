@@ -1,3 +1,5 @@
+import assert = require('assert');
+
 //
 // Note: This example test is leveraging the Mocha test framework.
 // Please refer to their documentation on https://mochajs.org/ for help.
@@ -12,6 +14,8 @@
 // import * as codecmder from '../extension';
 
 // Defines a Mocha test suite to group tests of similar kind together
-suite('Navigation', function() {
-  test('Valid Workspace', function() {});
+suite('Navigation', () => {
+  test('Valid Workspace', () => {
+    assert.equal(1, 2 - 1);
+  });
 });

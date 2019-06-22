@@ -12,10 +12,9 @@ import * as assert from 'assert';
 // import * as codecmder from '../extension';
 
 // Defines a Mocha test suite to group tests of similar kind together
-describe('Navigation', () => {
-  assert.notEqual(1, 2);
-});
-
-describe('Valid Workspace', () => {
-  assert.equal(1, 2 - 1);
+suite('Navigation', () => {
+  test('Valid Workspace', () => {
+    assert.equal(1, 2 - 1);
+    assert.notEqual(1, 2);
+  });
 });

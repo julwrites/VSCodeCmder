@@ -13,7 +13,9 @@ import * as assert from 'assert';
 
 // Defines a Mocha test suite to group tests of similar kind together
 describe('Navigation', () => {
-  describe('Valid Workspace', () => {
-    assert.equal(1, 2 - 1);
-  });
+  assert.notEqual(1, 2);
+});
+
+describe('Valid Workspace', () => {
+  assert.equal(1, 2 - 1);
 });

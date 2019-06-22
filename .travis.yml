@@ -11,5 +11,3 @@ jobs:
       script: npm install
     - stage: build
       script: npm run compile
-    - stage: test
-      script: npm run unittest

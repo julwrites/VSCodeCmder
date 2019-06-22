@@ -12,5 +12,4 @@ jobs:
     - stage: build
       script: npm run compile
     - stage: test
-      script: npm install
-      script: npm run test
+      script: npm run unittest

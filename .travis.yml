@@ -1,0 +1,13 @@
+language: node_js
+
+# Safelist
+branches:
+  only:
+    - master
+
+jobs:
+  include:
+    - stage: install
+      script: npm install
+    - stage: build
+      script: npm run compile

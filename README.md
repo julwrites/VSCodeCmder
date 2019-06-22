@@ -1,4 +1,4 @@
-# VSCodeCmder README
+# VSCodeCmder
 
 ![status: active](https://img.shields.io/badge/status-active-green.svg)
 

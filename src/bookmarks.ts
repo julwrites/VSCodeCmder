@@ -10,12 +10,11 @@ export interface Bookmark {
   path: string;
 }
 
-function Bookmark(name: string, path: string) {
-  let bookmark: Bookmark = {
+function Bookmark(name: string, path: string): Bookmark {
+  return {
     name: name,
     path: path,
   };
-  return bookmark;
 }
 
 function add(state: Memento, name: string, path: string) {

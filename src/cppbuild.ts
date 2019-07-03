@@ -21,13 +21,13 @@ interface Project {
   proj: string;
   name: string;
 }
-function Project(path: string, proj: string, name: string) {
-  let project: Project = {
+
+function Project(path: string, proj: string, name: string): Project {
+  return {
     path: path,
     proj: proj,
     name: name,
   };
-  return project;
 }
 
 var proj_map: Project[] = [];

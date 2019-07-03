@@ -14,13 +14,12 @@ interface Command {
   cmd: string;
 }
 
-function Command(path: string, cmd: string, name: string) {
-  let command: Command = {
+function Command(path: string, cmd: string, name: string): Command {
+  return {
     path: path,
     name: name,
     cmd: cmd,
   };
-  return command;
 }
 
 var cmd_map: Command[] = [];

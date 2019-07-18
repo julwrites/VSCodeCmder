@@ -43,7 +43,9 @@ function run_cmd(cmd: Command, cwd: string, args: string[]) {
 
   cwd = path.join(vscode.workspace.rootPath, cwd);
 
-  let child: ChildProcess = spawn(cmd.path, args, {cwd: cwd});
+  let child: ChildProcess = spawn(
+      cmd.path, args,
+      {cwd: cwd, detached: true, shell: true, windowsHide: true});
 
   child.stdout.setEncoding('utf8');
   child.stderr.setEncoding('utf8');

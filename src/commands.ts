@@ -163,10 +163,7 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
             {prompt: 'Please enter the Working Directory or escape to skip'})
         .then((val: string) => {
           if (val !== undefined) {
-            let args: string[] = [];
-            args = args.concat(val.split(' '));
-
-            open_cli(state, cwd);
+            open_cli(state, val);
           } else {
             open_cli(state, '');
           }

@@ -109,11 +109,13 @@
         }
     },
     "dependencies": {
+        "@types/getenv": "^0.7.0",
         "ansi-colors": "^3.2.2",
         "clone": "^2.0.0",
         "cross-spawn": "^6.0.5",
         "directory-tree": "^1.2.1",
         "fs": "^0.0.1-security",
+        "getenv": "^0.7.0",
         "ignore": "^5.0.4",
         "url-parse": "^1.4.3"
     },

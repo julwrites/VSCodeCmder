@@ -1,7 +1,7 @@
 import {ChildProcess} from 'child_process';
 import {Memento, OutputChannel, WorkspaceConfiguration} from 'vscode';
 
-import {darwin, linux, windows} from './global';
+import {darwin, linux, resolve_env, windows} from './global';
 
 var vscode = require('vscode');
 var fs = require('fs');
@@ -158,7 +158,9 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
   console.log('Starting up external CLI');
 
   if (cwd === undefined) {
-    vscode.window.showInputBox({prompt: 'Please enter the Working Directory'})
+    vscode.window
+        .showInputBox(
+            {prompt: 'Please enter the Working Directory or escape to skip'})
         .then((val: string) => {
           if (val !== undefined) {
             let args: string[] = [];
@@ -174,6 +176,8 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
     return;
   }
 
+  cwd = resolve_env(cwd);
+
   let config: WorkspaceConfiguration =
       vscode.workspace.getConfiguration('terminal.external');
 
@@ -188,6 +192,8 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
   }
 
   if (shell !== '') {
+    shell = resolve_env(shell);
+
     let cmd: Command = {name: 'Terminal', path: shell};
 
     run_cmd(cmd, <string>cwd, []);

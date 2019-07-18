@@ -1,4 +1,5 @@
 import {Memento} from 'vscode';
+import {resolve_env} from './global';
 
 var vscode = require('vscode');
 
@@ -71,6 +72,7 @@ var add_bookmark = function(state: Memento) {
   console.log('Starting up navigation for adding bookmark');
 
   query_name().then((val: string) => {
+    val = resolve_env(val);
     nav_path(state, val);
   });
 };

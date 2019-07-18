@@ -39,13 +39,19 @@ function run_cmd(cmd: Command, cwd: string, args: string[]) {
   outputChannel.show();
   outputChannel.clear();
 
-  log_output([cmd.path].concat(args).join(' '));
-
   cwd = path.join(vscode.workspace.rootPath, cwd);
 
-  let child: ChildProcess = spawn(
-      cmd.path, args,
-      {cwd: cwd, detached: true, shell: true, windowsHide: true});
+  log_output('cmd: ' + cmd.path);
+  log_output('arg: ' + args.join(' '));
+  log_output('cwd: ' + cwd);
+
+  let child: ChildProcess = spawn(cmd.path, args, {
+    cwd: cwd,
+    shell: true,
+    detached: true,
+    windowsVerbatimArguments: true,
+    windowsHide: true
+  });
 
   child.stdout.setEncoding('utf8');
   child.stderr.setEncoding('utf8');
@@ -181,6 +187,7 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
       vscode.workspace.getConfiguration('terminal.external');
 
   var shell: string = '';
+  var args: string[] = [];
 
   if (windows() && config.has('windowsExec')) {
     shell = <string><any>config.get('windowsExec');
@@ -195,7 +202,7 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
 
     let cmd: Command = {name: 'Terminal', path: shell};
 
-    run_cmd(cmd, <string>cwd, []);
+    run_cmd(cmd, <string>cwd, args);
   }
 };
 

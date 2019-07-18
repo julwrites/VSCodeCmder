@@ -169,6 +169,9 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
             open_cli(state, '');
           }
         });
+
+    // Return early if cwd not defined
+    return;
   }
 
   let config: WorkspaceConfiguration =

@@ -77,6 +77,13 @@ Commands can be specified in settings
 }
 ```
 
+Run Command Line:
+
+- Run CLI:
+  - Runs the program found at `terminal.external.windowsExec/osxExec/linuxExec` depending on platform
+
+The option is given to specify a CWD, but this can be skipped to select the default location that is the workspace
+
 ## Requirements
 
 Recommended to also install [IBM.OutputColorizer](https://marketplace.visualstudio.com/items?itemName=IBM.output-colorizer)

@@ -49,8 +49,6 @@ function run_cmd(cmd: Command, cwd: string, args: string[]) {
     cwd: cwd,
     shell: true,
     detached: true,
-    windowsVerbatimArguments: true,
-    windowsHide: true
   });
 
   child.stdout.setEncoding('utf8');

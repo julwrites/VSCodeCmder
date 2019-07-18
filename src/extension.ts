@@ -52,7 +52,7 @@ function activate(context: ExtensionContext) {
     commands.run_cmd(state);
   });
   var cliCommand = vscode.commands.registerCommand('codecmder.runCLI', () => {
-    commands.ext_cmd(state);
+    commands.run_cli(state);
   });
 
   // Add to a list of disposables that die when the extension deactivates

@@ -158,19 +158,17 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
   console.log('Starting up external CLI');
 
   if (cwd === undefined) {
-    let cwd: string = vscode.workspace.rootPath;
+    vscode.window.showInputBox({prompt: 'Please enter the Working Directory'})
+        .then((val: string) => {
+          if (val !== undefined) {
+            let args: string[] = [];
+            args = args.concat(val.split(' '));
 
-    if (cwd === undefined) {
-      vscode.window.showInputBox({prompt: 'Please enter the Working Directory'})
-          .then((val: string) => {
-            if (val !== undefined) {
-              let args: string[] = [];
-              args = args.concat(val.split(' '));
-
-              open_cli(state, cwd);
-            }
-          });
-    }
+            open_cli(state, cwd);
+          } else {
+            open_cli(state, '');
+          }
+        });
   }
 
   let config: WorkspaceConfiguration =
@@ -194,4 +192,4 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
 };
 
 exports.run_cmd = trigger_cmd;
-exports.ext_cmd = open_cli;
+exports.run_cli = open_cli;

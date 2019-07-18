@@ -1,6 +1,8 @@
 import {ChildProcess} from 'child_process';
 import {Memento, OutputChannel, WorkspaceConfiguration} from 'vscode';
 
+import {darwin, linux, windows} from './global';
+
 var vscode = require('vscode');
 var fs = require('fs');
 var path = require('path');
@@ -11,14 +13,12 @@ var spawn = require('cross-spawn');
 interface Command {
   path: string;
   name: string;
-  cmd: string;
 }
 
-function Command(path: string, cmd: string, name: string): Command {
+function Command(path: string, name: string): Command {
   return {
     path: path,
     name: name,
-    cmd: cmd,
   };
 }
 
@@ -107,12 +107,12 @@ function load_cfg() {
     try {
       if (null === spawn.sync(value).error) {
         // Add to path, set command name to key
-        cmd_map.push(Command(value, value, key));
+        cmd_map.push(Command(value, key));
       } else {
         let stat = fs.statSync(value);
         if (stat.isFile()) {
           // Add to path, set command name to key
-          cmd_map.push(Command(value, key, key));
+          cmd_map.push(Command(value, key));
         }
       }
     } catch (error) {
@@ -154,4 +154,44 @@ var trigger_cmd = function(state: Memento) {
   }
 };
 
+var open_cli = function(state: Memento, cwd: string|undefined) {
+  console.log('Starting up external CLI');
+
+  if (cwd === undefined) {
+    let cwd: string = vscode.workspace.rootPath;
+
+    if (cwd === undefined) {
+      vscode.window.showInputBox({prompt: 'Please enter the Working Directory'})
+          .then((val: string) => {
+            if (val !== undefined) {
+              let args: string[] = [];
+              args = args.concat(val.split(' '));
+
+              open_cli(state, cwd);
+            }
+          });
+    }
+  }
+
+  let config: WorkspaceConfiguration =
+      vscode.workspace.getConfiguration('terminal.external');
+
+  var shell: string = '';
+
+  if (windows() && config.has('windowsExec')) {
+    shell = <string><any>config.get('windowsExec');
+  } else if (darwin() && config.has('osxExec')) {
+    shell = <string><any>config.get('osxExec');
+  } else if (linux() && config.has('linuxExec')) {
+    shell = <string><any>config.get('linuxExec');
+  }
+
+  if (shell !== '') {
+    let cmd: Command = {name: 'Terminal', path: shell};
+
+    run_cmd(cmd, <string>cwd, []);
+  }
+};
+
 exports.run_cmd = trigger_cmd;
+exports.ext_cmd = open_cli;

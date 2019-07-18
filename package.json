@@ -24,7 +24,9 @@
         "onCommand:codecmder.addBookmark",
         "onCommand:codecmder.removeBookmark",
         "onCommand:codecmder.clearBookmark",
-        "onCommand:codecmder.buildproj"
+        "onCommand:codecmder.buildproj",
+        "onCommand:codecmder.runCommand",
+        "onCommand:codecmder.cliCommand"
     ],
     "main": "./out/extension",
     "contributes": {
@@ -56,6 +58,10 @@
             {
                 "command": "codecmder.runCmd",
                 "title": "Run a command"
+            },
+            {
+                "command": "codecmder.runCLI",
+                "title": "Open external CLI"
             }
         ],
         "keybindings": [
@@ -73,6 +79,11 @@
                 "command": "codecmder.buildproj",
                 "key": "ctrl+shift+b",
                 "mac": "ctrl+shift+b"
+            },
+            {
+                "command": "codecmder.runCLI",
+                "key": "ctrl+shift+t",
+                "mac": "ctrl+shift+t"
             }
         ],
         "configuration": {

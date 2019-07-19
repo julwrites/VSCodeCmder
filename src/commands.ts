@@ -1,4 +1,5 @@
 import {ChildProcess} from 'child_process';
+import {resolve} from 'dns';
 import {Memento, OutputChannel, WorkspaceConfiguration} from 'vscode';
 
 import {darwin, linux, resolve_env, windows} from './global';
@@ -38,8 +39,6 @@ function run_cmd(cmd: Command, cwd: string, args: string[]) {
 
   outputChannel.show();
   outputChannel.clear();
-
-  cwd = path.join(vscode.workspace.rootPath, cwd);
 
   log_output('cmd: ' + cmd.path);
   log_output('arg: ' + args.join(' '));
@@ -85,11 +84,17 @@ function find_run_cmd(name: string) {
               return;
             }
 
+            cwd = resolve_env(cwd);
+
             vscode.window.showInputBox({prompt: 'Enter parameters'})
                 .then((val: string) => {
                   if (val !== undefined) {
                     let args: string[] = [];
                     args = args.concat(val.split(' '));
+
+                    if (!path.isAbsolute(cwd)) {
+                      cwd = path.join(vscode.workspace.rootPath, cwd);
+                    }
 
                     run_cmd(item, cwd, args);
                   }
@@ -179,8 +184,6 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
     return;
   }
 
-  cwd = resolve_env(cwd);
-
   let config: WorkspaceConfiguration =
       vscode.workspace.getConfiguration('terminal.external');
 
@@ -197,8 +200,13 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
 
   if (shell !== '') {
     shell = resolve_env(shell);
+    cwd = resolve_env(cwd);
 
     let cmd: Command = {name: 'Terminal', path: shell};
+
+    if (!path.isAbsolute(cwd)) {
+      cwd = path.join(vscode.workspace.rootPath, cwd);
+    }
 
     run_cmd(cmd, <string>cwd, args);
   }

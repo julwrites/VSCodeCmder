@@ -1,5 +1,4 @@
 import {ChildProcess} from 'child_process';
-import {resolve} from 'dns';
 import {Memento, OutputChannel, WorkspaceConfiguration} from 'vscode';
 
 import {darwin, linux, resolve_env, windows} from './global';

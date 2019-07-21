@@ -44,13 +44,18 @@ export function resolve_env(val: string) {
 
     if (val.includes('%', start + 1)) {
       let end: number = val.indexOf('%', start + 1);
-
       let tag: string = val.substr(start, end - start + 1);
-
       let env: string = string(tag.substr(1, tag.length - 2));
 
       return path.normalize(val.split(tag).join(env));
     }
+  } else if (val.includes('$')) {
+    let start: number = val.indexOf('$');
+    let end: number = val.indexOf(' ', start + 1);
+    let tag: string = val.substr(start, end - start + 1);
+    let env: string = string(tag.substr(1, tag.length - 2));
+
+    return path.normalize(val.split(tag).join(env));
   }
 
   return path.normalize(val);

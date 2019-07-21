@@ -174,8 +174,6 @@ var open_cli = function(state: Memento, cwd: string|undefined) {
         .then((val: string) => {
           if (val !== undefined) {
             open_cli(state, val);
-          } else {
-            open_cli(state, '');
           }
         });
 

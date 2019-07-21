@@ -96,18 +96,9 @@ No extension settings
 
 ## Known Issues
 
--   Jump to path does not accept environment variables
 -   Output channel is not colored. While this can be fixed, it may make more sense to install [Output Colorizer](https://marketplace.visualstudio.com/items?itemName=IBM.output-colorizer)
 
 Issues or requests are welcome on [Github](https://github.com/julwrites/VSCode_Explorer)
-
-## Release Notes
-
-What's New?
-
--   Added build functionality for Visual Studio projects and Makefiles
--   Added caching and file watching functionality to speed up build calls
--   Added ignore and de-duplication functionality to present cleaner output
 
 ## Contributing
 

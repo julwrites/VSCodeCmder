@@ -12,4 +12,4 @@ jobs:
       - name: Install, Build, Test 🔧 # This runs a series of commands as if building a live version of the project
         run: |
           npm install
-          npm run compile
+          npm run vscode:prepublish
